@@ -17,17 +17,30 @@ public struct FixedPoint
 
     private const int ShiftBits = 32;//位移数
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数
-    private const long RoundAdd = 1L << (ShiftBits - 1);//用来处理四舍五入的加量
+    private const double RoundAdd = 0.5d;//用来处理四舍五入的加量
 
     #region 构造函数
-    public FixedPoint(float value)
+    
+    /*
+     * 假如规定保留1位小数  比如1.25  那么四舍五入就是1.3  放大10倍是12.5  再四舍五入是13  
+     * 本质上是对需要保留的最后1位小数四舍五入  也就是0.2
+     * 放大后 需要保留的最后1位小数 变成了整数中的个位 也就是2
+     * 所以直接加0.5 完全没问题
+     */
+    public FixedPoint(float value):this((double)value)
     {
-        scaledValue = (long)(value * ScaleFactor + (value >= 0 ? RoundAdd : -RoundAdd));
+
     }
 
     public FixedPoint(double value)
     {
-        scaledValue = (long)(value * ScaleFactor + (value >= 0 ? RoundAdd : -RoundAdd));
+        if (value > (double)long.MaxValue / ScaleFactor || value < (double)long.MinValue / ScaleFactor)
+        {
+            throw new OverflowException("double value is too large or small to be represented by FixedPoint.");
+        }
+
+        double temp = value * ScaleFactor;
+        scaledValue = (long)(temp + (value >= 0 ? RoundAdd : -RoundAdd));
     }
 
     public FixedPoint(int value)
@@ -35,33 +48,29 @@ public struct FixedPoint
         scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 后位运算的值位移数会按32取模 导致long的值丢失
     }
 
-    public FixedPoint(long value)
+    /// <summary>
+    /// 用于从一个原始的、已经缩放过的值创建实例。
+    /// </summary>
+    private FixedPoint(long rawScaledValue)
     {
-        scaledValue = value << ShiftBits;
+        this.scaledValue = rawScaledValue;
     }
+
     #endregion
 
     #region 常用接口
-    /// <summary>
-    /// 从一个已经放大的 scaled value 创建一个 FixedPoint 实例。
-    /// </summary>
-    public static FixedPoint FixedPointFactory(long scaledValue)
-    {
-        FixedPoint fp;
-        fp.scaledValue = scaledValue;
-        return fp;
-    }
+
     #endregion
 
     #region 四则运算 重载+ - * /
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue + b.scaledValue);
+        return new FixedPoint(a.scaledValue + b.scaledValue);
     }
 
     public static FixedPoint operator -(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue - b.scaledValue);
+        return new FixedPoint(a.scaledValue - b.scaledValue);
     }
 
     
@@ -76,7 +85,7 @@ public struct FixedPoint
 
     public static FixedPoint operator *(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue * b.scaledValue >> ShiftBits);
+        return new FixedPoint(a.scaledValue * b.scaledValue >> ShiftBits);
     }
 
     //A / B
@@ -99,10 +108,9 @@ public struct FixedPoint
     {   
         if(b.scaledValue == 0)//分母不能为0
         {
-            Debug.LogError("FixedPoint a/b b.scaledValue is 0!");
-            return new FixedPoint(0);
+            throw new DivideByZeroException("Division by zero in FixedPoint operation a / b.");
         }
-        return FixedPointFactory((a.scaledValue << ShiftBits) / b.scaledValue);
+        return new FixedPoint((a.scaledValue << ShiftBits) / b.scaledValue);
     }
     
     #endregion
