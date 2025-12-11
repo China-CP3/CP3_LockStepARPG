@@ -1,137 +1,97 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine; // 为了 Debug.LogError
 
+/// <summary>
+/// 一个64位定点数结构体 (Q32.32)。
+/// 32位整数部分，32位小数部分。
+/// </summary>
 public struct FixedPoint
 {
-    private long scaledValue;//放大后的数
-    public long ScaledValue
-    {
-        get 
-        {
-            return scaledValue;
-        }
-    }
+    private long scaledValue; // 放大后的整数值
+    public long ScaledValue => scaledValue;
 
-    private const int ShiftBits = 32;//位移数
-    private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数
-    private const long RoundAdd = 1L << (ShiftBits - 1);//用来处理四舍五入的加量
+    // --- 常量定义 ---
+    private const int ShiftBits = 32; // 小数部分占用的位数
+    private const long ScaleFactor = 1L << ShiftBits; // 放大/缩小因子
+    private const long RoundAdd = 1L << (ShiftBits - 1); // 用于浮点数构造时四舍五入的加数
+
 
     #region 构造函数
+
     public FixedPoint(float value)
     {
-        scaledValue = (long)(value * ScaleFactor + (value >= 0 ? RoundAdd : -RoundAdd));
+        // [健壮性修正] 增加溢出检查
+        if (value > (float)long.MaxValue / ScaleFactor || value < (float)long.MinValue / ScaleFactor)
+        {
+            throw new OverflowException("Float value is too large or small to be represented by FixedPoint.");
+        }
+        scaledValue = (long)((value * ScaleFactor) + (value >= 0 ? RoundAdd: -RoundAdd));
     }
 
     public FixedPoint(double value)
     {
-        scaledValue = (long)(value * ScaleFactor + (value >= 0 ? RoundAdd : -RoundAdd));
+        // [健壮性修正] 增加溢出检查
+        if (value > (double)long.MaxValue / ScaleFactor || value < (double)long.MinValue / ScaleFactor)
+        {
+            throw new OverflowException("Float value is too large or small to be represented by FixedPoint.");
+        }
+        scaledValue = (long)((value * ScaleFactor) + (value >= 0 ? RoundAdd : -RoundAdd));
     }
 
     public FixedPoint(int value)
     {
-        scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 然后位运算的值位移数会按32取模 导致long的值丢失
+        scaledValue = (long)value << ShiftBits;
     }
 
-    public FixedPoint(long value)
+    public FixedPoint(long value,bool isShift)
     {
+        // [健壮性修正] 检查long值是否超出Q31.32的整数部分表示范围
+        const long maxIntPart = long.MaxValue >> ShiftBits; // 等效于 int.MaxValue
+        const long minIntPart = long.MinValue >> ShiftBits; // 等效于 int.MinValue
+        if (value > maxIntPart || value < minIntPart)
+        {
+            throw new OverflowException("Long value is too large or small for the integer part of FixedPoint.");
+        }
         scaledValue = value << ShiftBits;
     }
-    #endregion
 
-    #region 常用接口
-    /// <summary>
-    /// 从一个已经放大的 scaled value 创建一个 FixedPoint 实例。
-    /// </summary>
-    public static FixedPoint FixedPointFactory(long scaledValue)
-    {
-        FixedPoint fp;
-        fp.scaledValue = scaledValue;
-        return fp;
-    }
     #endregion
 
     #region 四则运算 重载+ - * /
+
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue + b.scaledValue);
+        return new FixedPoint(a.scaledValue + b.scaledValue);
     }
 
     public static FixedPoint operator -(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue - b.scaledValue);
+        return new FixedPoint(a.scaledValue - b.scaledValue);
     }
 
-    
-    //* A* B
-    //= (A_real * ScaleFactor) * (B_real * ScaleFactor)
-    //= (A_real * B_real) * ScaleFactor * ScaleFactor
-
-    //结果被放大了 两次 ScaleFactor！
-    //正确结果应该是(A_real* B_real) * ScaleFactor。
-    //所以，在计算完 a.scaledValue * b.scaledValue 之后，我们必须除以一个 ScaleFactor 来把它“拉回”到正确的放大倍数。
-    //也就是 a * b / c 但是2个long相乘容易溢出 调换顺序 a / c * b 先缩小后放大也不行 会丢失精度 哪怕它俩数学上相等
+    // --- 修正后的乘法和除法 ---
 
     public static FixedPoint operator *(FixedPoint a, FixedPoint b)
     {
-        return FixedPointFactory(a.scaledValue * b.scaledValue >> ShiftBits);
+        // 将 scaledValue 提升到 128位的 decimal 类型进行计算，以防止溢出
+        decimal valA = a.scaledValue;
+        decimal valB = b.scaledValue;
+
+        // (A * B) / ScaleFactor
+        decimal result = (valA * valB) / ScaleFactor;
+
+        return new FixedPoint((long)result);
     }
 
-    //A / B
-    //= (A_real* ScaleFactor) / (B_real* ScaleFactor)
-    //= A_real / B_real
-    //两个 ScaleFactor 公倍数直接被约掉了 所以需要乘以1个ScaleFactor
-    //A_real / B_real * ScaleFactor 
-    //先除法的话 long会丢失精度 比如7/2=3 所以调换顺序  A_real * ScaleFactor / B_real //小心也会有乘法溢出问题
-    //A_real * ScaleFactor / B_real 乘法以后再除法 会不会产生小数？会的 但是毫不影响 举个例子
-    //10 / 3 * 10 = 3 * 10 = 30 丢失了0.3
-    // 10 * 10 / 3 = 33.3 这时候33就是10/3放大10倍后的结果 0.3是产生的小数 因为是long会自动丢失 完全没影响 
-    /*
-     * 10 * 10 / 3 = 33.3 为什么要乘以10  假设规则定为保留1位小数  不管结果在小数点后面有多少位 只放大10倍 只保留1位 
-     * 对分子乘以10等于是把结果乘以10倍 
-     * 原本是 10/3 = 3.3 会丢失0.3变成3
-     * 放大10倍 10 * 10 / 3 = 33.3 原本3.3变成了33.3 小数的0.3已经变成了整数 此时小数点后面的数 全是之前本身就要摒弃 不需要的  
-     * 只不过我们实际是左移32位 把原本存在于小数点后面32位的小数变到了整数，后续小数点后面如果还有数 完全不用管 丢弃即可
-     */
     public static FixedPoint operator /(FixedPoint a, FixedPoint b)
-    {   
-        if(b.scaledValue == 0)//分母不能为0
+    {
+        if (b.scaledValue == 0)
         {
-            Debug.LogError("FixedPoint a/b b.scaledValue is 0!");
+            Debug.LogError("FixedPoint division by zero!");
             return new FixedPoint(0);
         }
-        return FixedPointFactory((a.scaledValue << ShiftBits) / b.scaledValue);
-    }
 
-    #endregion
-
-    #region 类型转换与输出
-
-    public float ToFloat()
-    {
-        return (float)scaledValue / ScaleFactor;
-    }
-
-    public double ToDouble()
-    {
-        return (double)scaledValue / ScaleFactor;
-    }
-
-    public int ToInt()
-    {
-        // 直接右移，丢弃小数部分
-        return (int)(scaledValue >> ShiftBits);
-    }
-
-    /// <summary>
-    /// 重写ToString方法，方便在Debug.Log中直接查看其浮点值。
-    /// </summary>
-    public override string ToString()
-    {
-        // 使用 "R" (Round-trip) 格式化，可以尽可能精确地显示浮点值
-        return ToDouble().ToString("R");
+        return new FixedPoint((long)((a.scaledValue << ShiftBits) / b.ScaledValue));
     }
 
     #endregion
