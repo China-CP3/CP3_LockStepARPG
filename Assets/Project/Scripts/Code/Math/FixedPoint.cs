@@ -32,7 +32,7 @@ public struct FixedPoint
 
     public FixedPoint(int value)
     {
-        scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 后位运算的值位移数会按32取模 导致long的值丢失
+        scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 然后位运算的值位移数会按32取模 导致long的值丢失
     }
 
     public FixedPoint(long value)
@@ -104,6 +104,35 @@ public struct FixedPoint
         }
         return FixedPointFactory((a.scaledValue << ShiftBits) / b.scaledValue);
     }
-    
+
+    #endregion
+
+    #region 类型转换与输出
+
+    public float ToFloat()
+    {
+        return (float)scaledValue / ScaleFactor;
+    }
+
+    public double ToDouble()
+    {
+        return (double)scaledValue / ScaleFactor;
+    }
+
+    public int ToInt()
+    {
+        // 直接右移，丢弃小数部分
+        return (int)(scaledValue >> ShiftBits);
+    }
+
+    /// <summary>
+    /// 重写ToString方法，方便在Debug.Log中直接查看其浮点值。
+    /// </summary>
+    public override string ToString()
+    {
+        // 使用 "R" (Round-trip) 格式化，可以尽可能精确地显示浮点值
+        return ToDouble().ToString("R");
+    }
+
     #endregion
 }
