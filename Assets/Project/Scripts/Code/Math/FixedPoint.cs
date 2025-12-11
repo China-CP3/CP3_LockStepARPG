@@ -9,7 +9,7 @@ public struct FixedPoint
     private long scaledValue;//放大后的数
     public long ScaledValue
     {
-        get 
+        get
         {
             return scaledValue;
         }
@@ -17,17 +17,16 @@ public struct FixedPoint
 
     private const int ShiftBits = 32;//位移数
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数
-    private const double RoundAdd = 0.5d;//用来处理四舍五入的加量
 
     #region 构造函数
-    
+
     /*
      * 假如规定保留1位小数  比如1.25  那么四舍五入就是1.3  放大10倍是12.5  再四舍五入是13  
      * 本质上是对需要保留的最后1位小数四舍五入  也就是0.2
      * 放大后 需要保留的最后1位小数 变成了整数中的个位 也就是2
      * 所以直接加0.5 完全没问题
      */
-    public FixedPoint(float value):this((double)value)
+    public FixedPoint(float value) : this((double)value)
     {
 
     }
@@ -39,8 +38,8 @@ public struct FixedPoint
             throw new OverflowException("double value is too large or small to be represented by FixedPoint.");
         }
 
-        double temp = value * ScaleFactor;
-        scaledValue = (long)(temp + (value >= 0 ? RoundAdd : -RoundAdd));
+        decimal temp = (decimal)value * ScaleFactor;
+        scaledValue = (long)Math.Round(temp);
     }
 
     public FixedPoint(int value)
@@ -60,6 +59,11 @@ public struct FixedPoint
 
     #region 常用接口
 
+    public override string ToString()
+    {
+        return ((double)this).ToString();
+    }
+
     #endregion
 
     #region 四则运算 重载+ - * /
@@ -73,7 +77,7 @@ public struct FixedPoint
         return new FixedPoint(a.scaledValue - b.scaledValue);
     }
 
-    
+
     //* A* B
     //= (A_real * ScaleFactor) * (B_real * ScaleFactor)
     //= (A_real * B_real) * ScaleFactor * ScaleFactor
@@ -85,7 +89,9 @@ public struct FixedPoint
 
     public static FixedPoint operator *(FixedPoint a, FixedPoint b)
     {
-        return new FixedPoint(a.scaledValue * b.scaledValue >> ShiftBits);
+        decimal temp = (decimal)a.scaledValue * b.scaledValue;//decimal 不支持位运算
+        temp = temp / ScaleFactor;
+        return new FixedPoint((long)temp);
     }
 
     //A / B
@@ -105,13 +111,38 @@ public struct FixedPoint
      * 只不过我们实际是左移32位 把原本存在于小数点后面32位的小数变到了整数，后续小数点后面如果还有数 完全不用管 丢弃即可
      */
     public static FixedPoint operator /(FixedPoint a, FixedPoint b)
-    {   
-        if(b.scaledValue == 0)//分母不能为0
+    {
+        if (b.scaledValue == 0)//分母不能为0
         {
             throw new DivideByZeroException("Division by zero in FixedPoint operation a / b.");
         }
-        return new FixedPoint((a.scaledValue << ShiftBits) / b.scaledValue);
+
+        decimal temp = (decimal)a.scaledValue * ScaleFactor;
+        temp = temp / b.scaledValue;
+        return new FixedPoint((long)temp);
     }
-    
+
+    #endregion
+
+    #region 强制转换为 int float double long 
+    public static explicit operator int(FixedPoint fixedPoint)
+    {
+        return (int)(fixedPoint.scaledValue / ScaleFactor);//这里不用位运算是因为会对负数向负无穷取整 /号是向0取整
+    }
+
+    public static explicit operator long(FixedPoint fixedPoint)
+    {
+        return fixedPoint.scaledValue / ScaleFactor;
+    }
+
+    public static explicit operator float(FixedPoint fixedPoint)
+    {
+        return (float)((double)fixedPoint.scaledValue / ScaleFactor);//这里不用位运算是因为会丢失小数
+    }
+
+    public static explicit operator double(FixedPoint fixedPoint)
+    {
+        return (double)fixedPoint.scaledValue / ScaleFactor;
+    }
     #endregion
 }
