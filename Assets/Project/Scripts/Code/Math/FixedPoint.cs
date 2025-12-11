@@ -82,9 +82,19 @@ public struct FixedPoint
     //A / B
     //= (A_real* ScaleFactor) / (B_real* ScaleFactor)
     //= A_real / B_real
-    //两个 ScaleFactor 直接被约掉了！所以需要乘以1个ScaleFactor
-    //A_real / B_real * ScaleFactor
-
+    //两个 ScaleFactor 公倍数直接被约掉了 所以需要乘以1个ScaleFactor
+    //A_real / B_real * ScaleFactor 
+    //先除法的话 long会丢失精度 比如7/2=3 所以调换顺序  A_real * ScaleFactor / B_real //小心也会有乘法溢出问题
+    //A_real * ScaleFactor / B_real 乘法以后再除法 会不会产生小数？会的 但是毫不影响 举个例子
+    //10 / 3 * 10 = 3 * 10 = 30 丢失了0.3
+    // 10 * 10 / 3 = 33.3 这时候33就是10/3放大10倍后的结果 0.3是产生的小数 因为是long会自动丢失 完全没影响 
+    /*
+     * 10 * 10 / 3 = 33.3 为什么要乘以10  假设规则定为保留1位小数  不管结果在小数点后面有多少位 只放大10倍 只保留1位 
+     * 对分子乘以10等于是把结果乘以10倍 
+     * 原本是 10/3 = 3.3 会丢失0.3变成3
+     * 放大10倍 10 * 10 / 3 = 33.3 原本3.3变成了33.3 小数的0.3已经变成了整数 此时小数点后面的数 全是之前本身就要摒弃 不需要的  
+     * 只不过我们实际是左移32位 把原本存在于小数点后面32位的小数变到了整数，后续小数点后面如果还有数 完全不用管 丢弃即可
+     */
     public static FixedPoint operator /(FixedPoint a, FixedPoint b)
     {   
         if(b.scaledValue == 0)//分母不能为0
