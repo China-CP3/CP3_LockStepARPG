@@ -1,13 +1,14 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
+using System.Diagnostics;
 
 public struct FixedPoint
 {
-    private long scaledValue;//放大后的数
-    public long ScaledValue
+    //最大值 9000万亿
+    //小数精度 0.001 3位
+    //最大平方根 9500万
+
+    private readonly long scaledValue;//放大后的数
+    public readonly long ScaledValue
     {
         get
         {
@@ -15,8 +16,11 @@ public struct FixedPoint
         }
     }
 
-    private const int ShiftBits = 32;//位移数
-    private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数
+    private const int ShiftBits = 10;//位移数
+    private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数 1024
+
+    public static readonly FixedPoint Zero = new FixedPoint(0);
+    public static readonly FixedPoint One = new FixedPoint(ScaleFactor);
 
     #region 构造函数
 
@@ -33,11 +37,6 @@ public struct FixedPoint
 
     public FixedPoint(double value)
     {
-        if (value > (double)long.MaxValue / ScaleFactor || value < (double)long.MinValue / ScaleFactor)
-        {
-            throw new OverflowException("double value is too large or small to be represented by FixedPoint.");
-        }
-
         decimal temp = (decimal)value * ScaleFactor;
         scaledValue = (long)Math.Round(temp);
     }
@@ -61,7 +60,7 @@ public struct FixedPoint
 
     public override string ToString()
     {
-        return ((double)this).ToString();
+        return ((double)this).ToString("F3");
     }
 
     #endregion
@@ -69,6 +68,8 @@ public struct FixedPoint
     #region 四则运算 重载+ - * /
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
+        long result = a.scaledValue + b.scaledValue;
+
         return new FixedPoint(a.scaledValue + b.scaledValue);
     }
 
@@ -91,7 +92,13 @@ public struct FixedPoint
     {
         decimal temp = (decimal)a.scaledValue * b.scaledValue;//decimal 不支持位运算
         temp = temp / ScaleFactor;
-        return new FixedPoint((long)temp);
+
+        if(temp > long.MaxValue || temp < long.MinValue)
+        {
+            throw new OverflowException("FixedPoint multiplication result is out of range.");
+        }
+
+        return new FixedPoint((long)Math.Round(temp));
     }
 
     //A / B
@@ -119,7 +126,13 @@ public struct FixedPoint
 
         decimal temp = (decimal)a.scaledValue * ScaleFactor;
         temp = temp / b.scaledValue;
-        return new FixedPoint((long)temp);
+
+        if (temp > long.MaxValue || temp < long.MinValue)
+        {
+            throw new OverflowException("FixedPoint division  result is out of range.");
+        }
+
+        return new FixedPoint((long)Math.Round(temp));
     }
 
     #endregion
