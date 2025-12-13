@@ -19,10 +19,17 @@ public struct FixedPoint
     private const int ShiftBits = 10;//位移数
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数 1024
 
-    public static readonly FixedPoint Zero = new FixedPoint(0);
-    public static readonly FixedPoint One = new FixedPoint(1);
+    private const long MaxLongParam = long.MaxValue >> ShiftBits;//能传入构造函数的最大值 大概是
+    private const long MinLongParam = long.MinValue >> ShiftBits;
+    private const double MaxDoubleParam = (double)long.MaxValue / ScaleFactor;//能传入构造函数的最大值 大概是
+    private const double MinDoubleParam = (double)long.MinValue / ScaleFactor;//不用位移是因为要丢失小数部分
 
-    #region 构造函数
+    public static readonly FixedPoint Zero = new FixedPoint(0);
+    public static readonly FixedPoint One = new FixedPoint(ScaleFactor);
+    public static readonly FixedPoint MaxValue = new FixedPoint(long.MaxValue);//用于溢出钳制
+    public static readonly FixedPoint MinValue = new FixedPoint(long.MinValue);
+
+    #region 构造函数和工厂方法
 
     /*
      * 假如规定保留1位小数  比如1.25  那么四舍五入就是1.3  放大10倍是12.5  再四舍五入是13  
@@ -30,28 +37,64 @@ public struct FixedPoint
      * 放大后 需要保留的最后1位小数 变成了整数中的个位 也就是2
      * 所以直接加0.5 完全没问题
      */
-    public FixedPoint(float value) : this((double)value)
+    public static FixedPoint CreateByFloat(float value)
     {
-
+        return CreateByDouble(value);
     }
 
-    public FixedPoint(double value)
+    public static FixedPoint CreateByDouble(double value)
     {
-        decimal temp = (decimal)value * ScaleFactor;
-        scaledValue = (long)Math.Round(temp);
+        if (value > MaxDoubleParam)
+        {
+            return MaxValue;
+        }
+        if (value < MinDoubleParam)
+        {
+            return MinValue;
+        }
+
+        return new FixedPoint((long)Math.Round(value * ScaleFactor));
     }
 
-    public FixedPoint(int value)
+    //public FixedPoint(int value)
+    //{   
+    //    scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 后位运算的值位移数会按32取模 导致long的值丢失
+    //}
+
+    public static FixedPoint CreateByInt(int value)
     {
-        scaledValue = (long)value << ShiftBits;//C#规则 先位运算的值 决定容器大小 假如这里不(long)的话 value就是int 容器大小是32位 后位运算的值位移数会按32取模 导致long的值丢失
+        if (value > MaxLongParam)//避免未来修改了ShiftBits又来改这里 一劳永逸
+        {
+            return MaxValue;
+        }
+        if (value < MinLongParam)
+        {
+            return MinValue;
+        }
+
+        return new FixedPoint((long)value << ShiftBits);
+    }
+
+    public static FixedPoint CreateByLong(long value)
+    {
+        if (value > MaxLongParam)
+        {
+            return MaxValue;
+        }
+        if (value < MinLongParam)
+        {
+            return MinValue;
+        }
+
+        return new FixedPoint(value << ShiftBits);
     }
 
     /// <summary>
-    /// 用于从一个原始的、已经缩放过的值创建实例。
+    /// 已经放大过的 long 值创建一个 FixedPoint 实例。
     /// </summary>
-    private FixedPoint(long rawScaledValue)
+    private FixedPoint(long scaledValue)
     {
-        this.scaledValue = rawScaledValue;
+        this.scaledValue = scaledValue;
     }
 
     #endregion
@@ -68,12 +111,44 @@ public struct FixedPoint
     #region 四则运算 重载+ - * /
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
-        return new FixedPoint(a.scaledValue + b.scaledValue);
+        try
+        {
+            return new FixedPoint(checked(a.scaledValue + b.scaledValue));
+        }
+        catch (OverflowException)
+        {
+            // 一个正数和一个负数相加永远不会溢出
+            if (a.scaledValue > 0 && b.scaledValue > 0)
+            {
+                return MaxValue;
+            }
+            else
+            {
+                return MinValue;
+            }
+        }
     }
 
     public static FixedPoint operator -(FixedPoint a, FixedPoint b)
     {
-        return new FixedPoint(a.scaledValue - b.scaledValue);
+        try
+        {
+            return new FixedPoint(checked(a.scaledValue - b.scaledValue));
+        }
+        catch (OverflowException)
+        {
+            // 溢出只可能在 a 和 b 符号相反时发生
+            // 1. 正数 - 负数 =相加(可能向上溢出)
+            // 2. 负数 - 正数 =相减(可能向下溢出)
+            if (a.scaledValue > 0)
+            {
+                return MaxValue;
+            }
+            else
+            {
+                return MinValue;
+            }
+        }
     }
 
 
