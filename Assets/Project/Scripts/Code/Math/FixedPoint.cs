@@ -20,7 +20,7 @@ public struct FixedPoint
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数 1024
 
     public static readonly FixedPoint Zero = new FixedPoint(0);
-    public static readonly FixedPoint One = new FixedPoint(ScaleFactor);
+    public static readonly FixedPoint One = new FixedPoint(1);
 
     #region 构造函数
 
@@ -68,8 +68,6 @@ public struct FixedPoint
     #region 四则运算 重载+ - * /
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
-        long result = a.scaledValue + b.scaledValue;
-
         return new FixedPoint(a.scaledValue + b.scaledValue);
     }
 
