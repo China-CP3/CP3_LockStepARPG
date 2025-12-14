@@ -21,7 +21,7 @@ public struct FixedPoint
 
     private const long MaxLongParam = long.MaxValue >> ShiftBits;//能传入构造函数的最大值 大概是
     private const long MinLongParam = long.MinValue >> ShiftBits;
-    private const double MaxDoubleParam = (double)long.MaxValue / ScaleFactor;//能传入构造函数的最大值 大概是
+    private const double MaxDoubleParam = (double)long.MaxValue / ScaleFactor;//能传入构造函数的最大值
     private const double MinDoubleParam = (double)long.MinValue / ScaleFactor;//不用位移是因为要丢失小数部分
 
     public static readonly FixedPoint Zero = new FixedPoint(0);
