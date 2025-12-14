@@ -103,7 +103,7 @@ public struct FixedPoint
 
     public override string ToString()
     {
-        return ((double)this).ToString("F3");
+        return ((double)this).ToString();
     }
 
     #endregion
@@ -118,7 +118,6 @@ public struct FixedPoint
         if ((valA > 0 && valB > 0 && valA > long.MaxValue - valB) ||
             (valA < 0 && valB < 0 && valA < long.MinValue - valB))
         {
-            // 根据符号返回对应的极值
             return valA > 0 ? MaxValue : MinValue;
         }
 
@@ -187,7 +186,6 @@ public struct FixedPoint
      * 对分子乘以10等于是把结果乘以10倍 
      * 原本是 10/3 = 3.3 会丢失0.3变成3
      * 放大10倍 10 * 10 / 3 = 33.3 原本3.3变成了33.3 小数的0.3已经变成了整数 此时小数点后面的数 全是之前本身就要摒弃 不需要的  
-     * 只不过我们实际是左移32位 把原本存在于小数点后面32位的小数变到了整数，后续小数点后面如果还有数 完全不用管 丢弃即可
      */
     public static FixedPoint operator /(FixedPoint a, FixedPoint b)
     {
