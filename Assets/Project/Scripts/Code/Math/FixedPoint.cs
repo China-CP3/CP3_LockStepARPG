@@ -111,40 +111,46 @@ public struct FixedPoint
     #region 四则运算 重载+ - * /
     public static FixedPoint operator +(FixedPoint a, FixedPoint b)
     {
-        long valA = a.scaledValue;
-        long valB = b.scaledValue;
-
-        // 如果两个数符号相同，才可能溢出
-        if ((valA > 0 && valB > 0 && valA > long.MaxValue - valB) ||
-            (valA < 0 && valB < 0 && valA < long.MinValue - valB))
+        try
         {
-            // 根据符号返回对应的极值
-            return valA > 0 ? MaxValue : MinValue;
+            return new FixedPoint(checked(a.scaledValue + b.scaledValue));
         }
-
-        return new FixedPoint(valA + valB);
+        catch (OverflowException)
+        {
+            // 一个正数和一个负数相加永远不会溢出
+            if (a.scaledValue > 0 && b.scaledValue > 0)
+            {
+                return MaxValue;
+            }
+            else
+            {
+                return MinValue;
+            }
+        }
     }
 
     public static FixedPoint operator -(FixedPoint a, FixedPoint b)
     {
-        // 溢出只可能在 a 和 b 符号相反时发生
-
-        long valA = a.scaledValue;
-        long valB = b.scaledValue;
-
-        // 正数 - 负数 (等同于相加)
-        if (valA > 0 && valB < 0 && valA > long.MaxValue + valB)// valB是负数，所以+valB等同于减去一个正数
+        try
         {
-            return MaxValue;
+            return new FixedPoint(checked(a.scaledValue - b.scaledValue));
         }
-        // 负数 - 正数 (等同于相减)
-        if (valA < 0 && valB > 0 && valA < long.MinValue + valB)// valB是正数，所以+valB等同于负数减去一个正数
+        catch (OverflowException)
         {
-            return MinValue;
+            // 溢出只可能在 a 和 b 符号相反时发生
+            // 1. 正数 - 负数 =相加(可能向上溢出)
+            // 2. 负数 - 正数 =相减(可能向下溢出)
+            if (a.scaledValue > 0)
+            {
+                return MaxValue;
+            }
+            else
+            {
+                return MinValue;
+            }
         }
-
-        return new FixedPoint(valA - valB);
     }
+
 
     //* A* B
     //= (A_real * ScaleFactor) * (B_real * ScaleFactor)
@@ -160,14 +166,9 @@ public struct FixedPoint
         decimal temp = (decimal)a.scaledValue * b.scaledValue;//decimal 不支持位运算
         temp = temp / ScaleFactor;
 
-        if(temp > long.MaxValue)
+        if(temp > long.MaxValue || temp < long.MinValue)
         {
-            return MaxValue;
-        }
-
-        if(temp < long.MinValue)
-        {
-            return MinValue;
+            throw new OverflowException("FixedPoint multiplication result is out of range.");
         }
 
         return new FixedPoint((long)Math.Round(temp));
@@ -193,20 +194,15 @@ public struct FixedPoint
     {
         if (b.scaledValue == 0)//分母不能为0
         {
-            throw new DivideByZeroException("FixedPoint operation a/b b is Zero!!!");
+            throw new DivideByZeroException("Division by zero in FixedPoint operation a / b.");
         }
 
         decimal temp = (decimal)a.scaledValue * ScaleFactor;
         temp = temp / b.scaledValue;
 
-        if (temp > long.MaxValue)
+        if (temp > long.MaxValue || temp < long.MinValue)
         {
-            return MaxValue;
-        }
-
-        if (temp < long.MinValue)
-        {
-            return MinValue;
+            throw new OverflowException("FixedPoint division  result is out of range.");
         }
 
         return new FixedPoint((long)Math.Round(temp));
