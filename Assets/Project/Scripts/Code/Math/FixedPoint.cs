@@ -4,7 +4,7 @@ using System.Diagnostics;
 public readonly struct FixedPoint
 {
     //最大值 9000万亿
-    //小数部分占10位，精度为 1/1024 (≈0.000976) 实际可以保证有效精度2位
+    //小数部分占10位，精度为 1/1000 = 0.001 实际可以保证有效精度2位
     //最大平方根 9500万
 
     private readonly long scaledValue;//放大后的数
@@ -195,7 +195,7 @@ public readonly struct FixedPoint
         }
 
         decimal temp = (decimal)a.scaledValue * ScaleFactor;
-        temp = temp / b.scaledValue;
+        temp = temp / b.scaledValue;//小数不能位移运算  负数位移运算会向负无穷取整 干脆统一用除法
 
         if (temp > long.MaxValue)
         {
