@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-public readonly struct FixedPoint
+public readonly struct FixedPoint:IEquatable<FixedPoint>
 {
     //最大值 9000万亿
     //小数部分占10位，精度为 1/1000 = 0.001 实际可以保证有效精度2位
@@ -104,6 +104,26 @@ public readonly struct FixedPoint
     public override string ToString()
     {
         return ((double)this).ToString();
+    }
+
+    public bool Equals(FixedPoint other)
+    {
+        return this.scaledValue == other.scaledValue;
+    }
+
+    //根本原因  如果结构体不重写就会走笨重的反射  如果类不重写 会走默认的equals fp参数的equals 进行引用比较
+    public override bool Equals(object other)
+    {
+        if(other is FixedPoint)
+        {
+            return this.Equals((FixedPoint)other);
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return scaledValue.GetHashCode();
     }
 
     #endregion
@@ -231,6 +251,38 @@ public readonly struct FixedPoint
     public static explicit operator double(FixedPoint fixedPoint)
     {
         return (double)fixedPoint.scaledValue / ScaleFactor;
+    }
+    #endregion
+
+    #region 重载运算符 == != > < >= <=
+    public static bool operator ==(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue == b.scaledValue;
+    }
+
+    public static bool operator !=(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue != b.scaledValue;
+    }
+
+    public static bool operator >(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue > b.scaledValue;
+    }
+
+    public static bool operator <(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue < b.scaledValue;
+    }
+
+    public static bool operator <=(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue <= b.scaledValue;
+    }
+
+    public static bool operator >=(FixedPoint a, FixedPoint b)
+    {
+        return a.scaledValue >= b.scaledValue;
     }
     #endregion
 }
