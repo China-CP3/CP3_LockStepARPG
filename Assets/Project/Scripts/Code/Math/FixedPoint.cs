@@ -1,10 +1,10 @@
 using System;
 using System.Diagnostics;
 
-public struct FixedPoint
+public readonly struct FixedPoint
 {
     //最大值 9000万亿
-    //小数精度 0.001 3位
+    //小数部分占10位，精度为 1/1024 (≈0.000976) 实际可以保证有效精度2位
     //最大平方根 9500万
 
     private readonly long scaledValue;//放大后的数
