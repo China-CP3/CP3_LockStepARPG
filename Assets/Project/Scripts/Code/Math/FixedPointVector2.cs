@@ -57,6 +57,7 @@ public readonly struct FixedPointVector2
 
     #region º∏∫Œ Ù–‘
 
+    //todo
     //public FixedPoint sqrMagnitude
     //{
 
