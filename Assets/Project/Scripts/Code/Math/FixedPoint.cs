@@ -90,6 +90,16 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     }
 
     /// <summary>
+    /// 用FixedPoint的ScaledValue创建1个新的FixedPoint
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static FixedPoint CreateByScaledValue(long scaledValue)
+    {
+        return new FixedPoint(scaledValue);
+    }
+
+    /// <summary>
     /// 已经放大过的 long 值创建一个 FixedPoint 实例。
     /// </summary>
     private FixedPoint(long scaledValue)
@@ -163,6 +173,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         }
 
         return new FixedPoint(valA - valB);
+    }
+
+    public static FixedPoint operator -(FixedPoint a)
+    {
+        return new FixedPoint(-a.scaledValue);
     }
 
     //* A* B
