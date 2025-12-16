@@ -30,7 +30,7 @@ public readonly struct FixedPointVector2
     }
 
     //2个向量相乘 有2种情况 点乘叉乘 所以不用重载运算符 而是写函数
-    //2哥向量相除 没有意义 不需要 包括unity的vector也没有提供
+    //2个向量相除 没有意义 不需要 包括unity的vector也没有提供
     public static FixedPoint Dot(FixedPointVector2 a, FixedPointVector2 b)
     {
         return a.x * b.x + a.y * b.y;
