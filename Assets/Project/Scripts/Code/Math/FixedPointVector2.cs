@@ -54,4 +54,13 @@ public readonly struct FixedPointVector2
     }
 
     #endregion
+
+    #region º∏∫Œ Ù–‘
+
+    //public FixedPoint sqrMagnitude
+    //{
+
+    //}
+
+    #endregion
 }
