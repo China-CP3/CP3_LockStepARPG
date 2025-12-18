@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using UnityEngine;
 
 public readonly struct FixedPoint:IEquatable<FixedPoint>
 {
@@ -351,10 +352,24 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
         //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
         int mostBitPos = FindMostSignificantBitPosition(targetScaledValue);
-        int firstValue = 1 << (mostBitPos >> 1);
+        long currentGuess = 1L << ((mostBitPos >> 1) + 1);//注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
 
+        const int MAX_ITERATIONS = 12;
+        for (int i = 0; i < MAX_ITERATIONS; i++)
+        {
+            long nextGuessValue = (currentGuess + targetScaledValue / currentGuess) >> 1;
 
+            if (nextGuessValue >= currentGuess)//正常来说 下一次猜测会明显小于当前猜测 不然的话 说明已经是最终结果
+            {
+                return FixedPoint.CreateByScaledValue(currentGuess);
+            }
+
+            currentGuess = nextGuessValue;
+        }
+
+        return FixedPoint.CreateByScaledValue(currentGuess);//循环12次后 实在不行就返回当前值 基本上不会触发这一行
     }
+
 
     /// <summary>
     /// 二分法查找 某个值的二进制最左边的1具体在哪一位
@@ -372,7 +387,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         }
 
         int postion = 0;
-        for (int bit = 32; bit > 0; bit >>= 2)
+        for (int bit = 32; bit > 0; bit >>= 1)
         {
             if (value >> bit != 0)
             {
