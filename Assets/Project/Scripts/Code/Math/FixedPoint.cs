@@ -324,4 +324,33 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         return a.scaledValue >= b.scaledValue;
     }
     #endregion
+
+    #region 数学几何接口
+    /// <summary>
+    /// 计算定点数的平方根 牛顿迭代法
+    /// </summary>
+    /// <param name="targetFp">一个非负的定点数 对它开方</param>
+    /// <returns>该定点数的平方根</returns>
+    //public static FixedPoint Sqrt(FixedPoint targetFp)
+    //{
+    //    //负数没有实数平方根
+    //    if (targetFp.scaledValue < 0)
+    //    {
+    //        throw new ArgumentException("FixedPoint Sqrt() param fp < 0 !", nameof(targetFp));
+    //    }
+
+    //    if (targetFp == Zero)//0的平方根就是0
+    //    {
+    //        return Zero;
+    //    }
+
+
+    //    //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
+    //    //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
+    //    long nScaled = targetFp.scaledValue << ShiftBits;
+
+
+
+    //}
+    #endregion
 }
