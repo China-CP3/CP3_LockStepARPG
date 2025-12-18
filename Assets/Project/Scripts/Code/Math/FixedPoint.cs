@@ -331,26 +331,57 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     /// </summary>
     /// <param name="targetFp">一个非负的定点数 对它开方</param>
     /// <returns>该定点数的平方根</returns>
-    //public static FixedPoint Sqrt(FixedPoint targetFp)
-    //{
-    //    //负数没有实数平方根
-    //    if (targetFp.scaledValue < 0)
-    //    {
-    //        throw new ArgumentException("FixedPoint Sqrt() param fp < 0 !", nameof(targetFp));
-    //    }
+    public static FixedPoint Sqrt(FixedPoint fixedPoint)
+    {
+        //负数没有实数平方根
+        if (fixedPoint.scaledValue < 0)
+        {
+            throw new ArgumentException("FixedPoint Sqrt() param fp < 0 !", nameof(fixedPoint));
+        }
 
-    //    if (targetFp == Zero)//0的平方根就是0
-    //    {
-    //        return Zero;
-    //    }
+        if (fixedPoint == Zero)//0的平方根就是0
+        {
+            return Zero;
+        }
+
+        //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
+        //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
+        long targetScaledValue = fixedPoint.scaledValue << ShiftBits;
+
+        //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
+        //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
+        int mostBitPos = FindMostSignificantBitPosition(targetScaledValue);
+        int firstValue = 1 << (mostBitPos >> 1);
 
 
-    //    //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
-    //    //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
-    //    long nScaled = targetFp.scaledValue << ShiftBits;
+    }
 
+    /// <summary>
+    /// 二分法查找 某个值的二进制最左边的1具体在哪一位
+    /// </summary>
+    /// <returns></returns>
+    private static int FindMostSignificantBitPosition(long value)
+    {
+        //思路 用8位举例 0001 0000 先检查高4位(最大位数的一半) !=0 说明值在高4位 丢弃低4位多余的值 返回值+4
+        //现在是0001 检查高2位 == 0 说明值不在高2位 
+        //现在是0001 检查高1位 == 0 说明值不在高1位 已经可以得出在第0位 返回值+0 最终返回值是4
 
+        if(value <= 0)
+        {
+            return -1;
+        }
 
-    //}
+        int postion = 0;
+        for (int bit = 32; bit > 0; bit >>= 2)
+        {
+            if (value >> bit != 0)
+            {
+                postion += bit; 
+                value >>= bit;
+            }
+        }
+
+        return postion;
+    }
     #endregion
 }
