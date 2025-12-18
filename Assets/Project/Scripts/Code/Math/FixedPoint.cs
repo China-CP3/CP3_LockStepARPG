@@ -250,12 +250,36 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     #region 强制转换为 int float double long 
     public static explicit operator int(FixedPoint fixedPoint)
     {
-        return (int)(fixedPoint.scaledValue / ScaleFactor);//这里不用位运算是因为会对负数向负无穷取整 /号是向0取整
+        //这里不用位运算是因为会对负数向负无穷取整 /号是向0取整
+        return (int)(fixedPoint.scaledValue / ScaleFactor);
+
+        //优化为位移运算 //后来发现可能是反向优化 编译器会检查 把能够转换为位运算的情况自动转换 比如乘除的是2的次幂
+        //但是有了ifesle cpu速度会慢一点 遇到分支时CPU只能“猜测”走哪条路，一旦猜错，之前做的预处理就全部作废，导致严重的时间浪费。
+        //if(fixedPoint.scaledValue >= 0)
+        //{
+        //    return (int)fixedPoint.scaledValue >> ShiftBits;
+        //}
+        //else
+        //{
+        //    return (int) -(-fixedPoint.scaledValue >> ShiftBits);
+        //}
     }
 
     public static explicit operator long(FixedPoint fixedPoint)
     {
+        //这里不用位运算是因为会对负数向负无穷取整 /号是向0取整
         return fixedPoint.scaledValue / ScaleFactor;
+
+        //优化为位移运算 //后来发现可能是反向优化 编译器会检查 把能够转换为位运算的情况自动转换 比如乘除的是2的次幂
+        //但是有了ifesle cpu速度会慢一点 遇到分支时CPU只能“猜测”走哪条路，一旦猜错，之前做的预处理就全部作废，导致严重的时间浪费。
+        //if (fixedPoint.scaledValue >= 0)
+        //{
+        //    return (long)fixedPoint.scaledValue >> ShiftBits;
+        //}
+        //else
+        //{
+        //    return (long)-(-fixedPoint.scaledValue >> ShiftBits);
+        //}
     }
 
     public static explicit operator float(FixedPoint fixedPoint)
