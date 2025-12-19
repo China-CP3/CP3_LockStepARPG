@@ -361,7 +361,6 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //有 +1 的计算：
         //(5 >> 1) + 1 = 2 + 1 = 3   初始猜测值 = 1L << 3 = 8
         long currentGuess = 1L << ((mostBitPos >> 1) + 1);
-
         const int MAX_ITERATIONS = 12;
         for (int i = 0; i < MAX_ITERATIONS; i++)
         {
@@ -372,6 +371,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
             long nextGuessValue = (currentGuess + targetScaledValue / currentGuess) >> 1;
 
+            UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, (double)currentGuess/1024, (double)nextGuessValue / 1024, Math.Sqrt(fixedPoint.scaledValue/1024)));
             if (nextGuessValue >= currentGuess)//正常来说 下一次猜测会明显小于当前猜测 不然的话 说明已经是最终结果
             {
                 return FixedPoint.CreateByScaledValue(currentGuess);
