@@ -5,7 +5,7 @@ using UnityEngine;
 public readonly struct FixedPoint:IEquatable<FixedPoint>
 {
     //最大值 9000万亿
-    //小数部分占10位，精度为 1/1000 = 0.001 实际可以保证有效精度2位
+    //小数部分占10位，精度为 1/1000 = 0.001 实际可以保证有效精度3位
     //最大平方根 9500万
 
     private readonly long scaledValue;//放大后的数
@@ -347,12 +347,20 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
         //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
         //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
-        long targetScaledValue = fixedPoint.scaledValue << ShiftBits;
+        long targetScaledValue = fixedPoint.scaledValue << ShiftBits;//重点在于这一行的溢出没法处理  需要int128 unity的.net版本过低 不支持
 
         //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
         //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
         int mostBitPos = FindMostSignificantBitPosition(targetScaledValue);
-        long currentGuess = 1L << ((mostBitPos >> 1) + 1);//注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
+        //注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
+        //+1是为了避免向下取整丢失精度 导致首次猜测值过小 距离真实平方根更遥远 导致后续牛顿迭代法要多循环更多次
+        //比如 sqrt(60) 约等于 7.74。
+        //N = 60。二进制是 111100。最高有效位在第5位，所以 mostBitPos = 5。
+        //没有 +1 的计算：
+        //5 >> 1 = 2 (向下取整，丢失了精度) 初始猜测值 = 1L << 2 = 4  这个猜测值 4 和真实值 7.74 相比，误差很大。
+        //有 +1 的计算：
+        //(5 >> 1) + 1 = 2 + 1 = 3   初始猜测值 = 1L << 3 = 8
+        long currentGuess = 1L << ((mostBitPos >> 1) + 1);
 
         const int MAX_ITERATIONS = 12;
         for (int i = 0; i < MAX_ITERATIONS; i++)
