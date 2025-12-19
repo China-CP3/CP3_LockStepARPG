@@ -365,6 +365,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         const int MAX_ITERATIONS = 12;
         for (int i = 0; i < MAX_ITERATIONS; i++)
         {
+            if (currentGuess == 0)
+            {
+                break;
+            }
+
             long nextGuessValue = (currentGuess + targetScaledValue / currentGuess) >> 1;
 
             if (nextGuessValue >= currentGuess)//正常来说 下一次猜测会明显小于当前猜测 不然的话 说明已经是最终结果
