@@ -7,7 +7,7 @@ public class test : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        FixedPoint.Sqrt(FixedPoint.CreateByLong(1024));
+        FixedPoint.Sqrt(FixedPoint.CreateByLong(63));
         FixedPoint.Sqrt(FixedPoint.CreateByLong(9000));
     }
 

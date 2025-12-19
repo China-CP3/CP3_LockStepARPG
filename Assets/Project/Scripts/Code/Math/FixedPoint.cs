@@ -360,6 +360,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //5 >> 1 = 2 (向下取整，丢失了精度) 初始猜测值 = 1L << 2 = 4  这个猜测值 4 和真实值 7.74 相比，误差很大。
         //有 +1 的计算：
         //(5 >> 1) + 1 = 2 + 1 = 3   初始猜测值 = 1L << 3 = 8
+        //+1也保证了初始猜测值总是大于真实的平方根
         long currentGuess = 1L << ((mostBitPos >> 1) + 1);
         const int MAX_ITERATIONS = 12;
         for (int i = 0; i < MAX_ITERATIONS; i++)
@@ -371,8 +372,8 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
             long nextGuessValue = (currentGuess + targetScaledValue / currentGuess) >> 1;
 
-            UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, (double)currentGuess/1024, (double)nextGuessValue / 1024, Math.Sqrt(fixedPoint.scaledValue/1024)));
-            if (nextGuessValue >= currentGuess)//正常来说 下一次猜测会明显小于当前猜测 不然的话 说明已经是最终结果
+            UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, currentGuess/1024, nextGuessValue / 1024, Math.Sqrt(fixedPoint.scaledValue/1024)));
+            if (nextGuessValue >= currentGuess)//下次猜测会小于当前猜测 猜测值每次循环从大到小越来越逼近结果 如果下次猜测的值大于了当前猜测 说明已经越过了结果
             {
                 return FixedPoint.CreateByScaledValue(currentGuess);
             }
