@@ -2,40 +2,42 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.Numerics; 
+using System.Text;    
 
-public struct MyInt8
+public struct Int128
 {
-    public byte low4Bit;//表示0-15
-    public byte high4Bits;
+    public ulong low64;
+    public ulong high64;
 
-    public MyInt8(byte value)
+    public Int128(ulong high64, ulong low64)
     {
-        low4Bit = (byte)(value % 16);//看看低位还剩多少
-        high4Bits = (byte)((value - low4Bit) / 16);//计算高位是多少
-
+        this.high64 = high64;
+        this.low64 = low64;
     }
 
-    public byte GetValue
+    public static Int128 operator +(Int128 a, Int128 b)
     {
-        get { return (byte)(high4Bits << 4 | low4Bit); }
-    }
+        ulong tempLow = a.low64 + b.low64;
+        byte lowToHighCarry = 0;
+        if (tempLow < a.low64)
+        {
+            lowToHighCarry = 1;
+        }
+        ulong tempHigh = a.high64 + b.high64 + lowToHighCarry;
 
-    public static MyInt8 operator +(MyInt8 a, MyInt8 b)
-    {
-        MyInt8 result = new MyInt8();
-
-        int tempLow = a.low4Bit + b.low4Bit;
-        result.low4Bit = (byte)(tempLow % 16);
-        byte caryy = (byte)((tempLow - result.low4Bit) / 16);
-
-        int tempHigh = a.high4Bits + b.high4Bits + caryy;
-        result.high4Bits = (byte)tempHigh;   
-
-        return result;
+        return new Int128(tempHigh, tempLow);
     }
 
     public override string ToString()
     {
-        return $"[High: {high4Bits}, Low: {low4Bit}]  (Value: {GetValue})";
+
+        byte[] bytes = new byte[17]; 
+        System.Buffer.BlockCopy(System.BitConverter.GetBytes(low64), 0, bytes, 0, 8);
+        System.Buffer.BlockCopy(System.BitConverter.GetBytes(high64), 0, bytes, 8, 8);
+
+        BigInteger bigInt = new BigInteger(bytes);
+
+        return bigInt.ToString();
     }
 }
