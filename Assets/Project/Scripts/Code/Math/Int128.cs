@@ -68,16 +68,23 @@ public readonly struct Int128
 
     public static Int128 operator -(Int128 a, Int128 b)
     {
-        ulong tempLow = a.low64 - b.low64;
-        byte highToLowNum = 0;
-        if (a.low64 < b.low64)
-        {
-            highToLowNum = 1;
-        }
+        //ulong tempLow = a.low64 - b.low64;
+        //byte highToLowNum = 0;
+        //if (a.low64 < b.low64)
+        //{
+        //    highToLowNum = 1;
+        //}
 
-        long tempHigh = a.high64 - b.high64 - highToLowNum;
+        //long tempHigh = a.high64 - b.high64 - highToLowNum;
 
-        return new Int128(tempHigh, tempLow);
+        //return new Int128(tempHigh, tempLow);
+
+        return a + (-b);
+    }
+
+    public static Int128 operator -(Int128 a)
+    {
+        return ~a + One;
     }
 
     //public static Int128 operator *(Int128 a, Int128 b)
@@ -91,7 +98,40 @@ public readonly struct Int128
     //}
     #endregion
 
-    #region 重载运算符 == != > < <= >=
+    #region 重载运算符 == != > < <= >= ~
+    public static bool operator ==(Int128 a, Int128 b)
+    {
+        return a.high64 == b.high64 && a.low64 == b.low64;
+    }
 
+    public static bool operator !=(Int128 a, Int128 b)
+    {
+        return a.high64 != b.high64 || a.low64 != b.low64;
+    }
+
+    public static bool operator >(Int128 a, Int128 b)
+    {
+        return a.high64 > b.high64 || (a.high64 == b.high64 && a.low64 > b.low64);
+    }
+
+    public static bool operator <(Int128 a, Int128 b)
+    {
+        return a.high64 < b.high64 || (a.high64 == b.high64 && a.low64 < b.low64);
+    }
+
+    public static bool operator >=(Int128 a, Int128 b)
+    {
+        return a.high64 > b.high64 || (a.high64 == b.high64 && a.low64 >= b.low64);
+    }
+
+    public static bool operator <=(Int128 a, Int128 b)
+    {
+        return a.high64 < b.high64 || (a.high64 == b.high64 && a.low64 <= b.low64);
+    }
+
+    public static Int128 operator ~(Int128 a)
+    {
+        return new Int128(~a.high64, ~a.low64);
+    }
     #endregion
 }
