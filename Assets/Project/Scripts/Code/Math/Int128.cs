@@ -49,7 +49,6 @@ public readonly struct Int128
         return $"[High: 0x{high64:X16}, Low: 0x{low64:X16}]";
     }
 
-
     #endregion
 
     #region Àƒ‘Ú‘ÀÀ„ +-*/
@@ -68,17 +67,6 @@ public readonly struct Int128
 
     public static Int128 operator -(Int128 a, Int128 b)
     {
-        //ulong tempLow = a.low64 - b.low64;
-        //byte highToLowNum = 0;
-        //if (a.low64 < b.low64)
-        //{
-        //    highToLowNum = 1;
-        //}
-
-        //long tempHigh = a.high64 - b.high64 - highToLowNum;
-
-        //return new Int128(tempHigh, tempLow);
-
         return a + (-b);
     }
 
