@@ -9,9 +9,12 @@ public readonly struct Int128
     public readonly long high64;//正负由最高位决定
 
     #region 常量定义
-
+    public static readonly Int128 Zero = new Int128(0);
+    public static readonly Int128 One = new Int128(1);
+    public static readonly Int128 MaxValue = new Int128(long.MaxValue,ulong.MaxValue);
+    public static readonly Int128 MinValue = new Int128(long.MinValue, 0);
+    public static readonly Int128 MinusOne = new Int128(-1, ulong.MaxValue);
     #endregion
-
 
     #region 构造函数
     //“垃圾进，垃圾出” (Garbage In, Garbage Out - GIGO)
@@ -38,12 +41,18 @@ public readonly struct Int128
     }
     #endregion
 
+
+    #region 常用接口
     public override string ToString()
     {
         //用16进制方便看是否计算成功  不然数字太大了看着眼花
         return $"[High: 0x{high64:X16}, Low: 0x{low64:X16}]";
     }
 
+
+    #endregion
+
+    #region 四则运算 +-*/
     public static Int128 operator +(Int128 a, Int128 b)
     {
         ulong tempLow = a.low64 + b.low64;
@@ -61,7 +70,7 @@ public readonly struct Int128
     {
         ulong tempLow = a.low64 - b.low64;
         byte highToLowNum = 0;
-        if(a.low64 < b.low64)
+        if (a.low64 < b.low64)
         {
             highToLowNum = 1;
         }
@@ -70,5 +79,19 @@ public readonly struct Int128
 
         return new Int128(tempHigh, tempLow);
     }
-    
+
+    //public static Int128 operator *(Int128 a, Int128 b)
+    //{
+
+    //}
+
+    //public static Int128 operator -(Int128 a, Int128 b)
+    //{
+
+    //}
+    #endregion
+
+    #region 重载运算符 == != > < <= >=
+
+    #endregion
 }
