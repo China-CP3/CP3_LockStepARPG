@@ -101,8 +101,7 @@ public readonly struct Int128
         ulong bLow = b & 0xFFFFFFFF;
         ulong bHigh = b >> 32;
 
-        //就像小学时乘法，要计算 12 * 34，把它拆成 (10+2) * (30+4)，然后计算 2*4, 2*30, 10*4, 10*30，最后加起来
-        //可以把 12 看成(1 * 10) + 2，把 34 看成(3 * 10) + 4。
+        //计算 12 * 34，把它拆成 (10+2) * (30+4)，然后计算 2*4, 2*30, 10*4, 10*30，最后加起来
         //aHigh = 1, aLow = 2
         //bHigh = 3, bLow = 4
         //p1 = aLow * bLow; -> 2 * 4 = 8。（个位乘以个位）
@@ -113,7 +112,7 @@ public readonly struct Int128
         //8 是个位。
         //6 和 4 都是十位上的，6 + 4 = 10 表示有 10 个“十”。
         //3 是百位上的。
-        //所以结果是：3个百 + 10个十 + 8个一 = 300 + 100 + 8 = 408。
+        //所以结果是：3 * 10 * 10 + 10 * 10 + 8 = 300 + 100 + 8 = 408。
          
         //交叉相乘 a * b = (aHigh * bHigh * 2^64) + (aHigh * bLow * 2^32) + (aLow * bHigh * 2^32) + (aLow * bLow)
         //p4 * 2^64 + (p2+p3) * 2^32 + p1
@@ -122,17 +121,21 @@ public readonly struct Int128
         ulong p3 = aHigh * bLow;
         ulong p4 = aHigh * bHigh;
 
-        ulong middle = p2 + p3;
+        ulong carry = 0;
+        ulong middle = p2 + p3;//注意看上面的例子和公式 交叉相乘 注定天生就要左移32位 例子中的6和4 天生就是60 40 放大了10倍
+        if (middle < p2)//对于128位来说 middle自身是64位但是已经处于在32-95这个位置 当它溢出时 等于是在high的第31位溢出 需要在32位+1 所以是加上1UL << 32 而不是简单的末尾+1
+        {
+            carry = 1UL << 32;
+        }
+
         low = p1 + (middle << 32);
-        ulong high = p4 + (middle >> 32);
         if (low < p1)
         {
-            high++;
+            carry += 1;
         }
-        if (middle < p2)
-        {
-            high += (1UL << 32); // 1UL << 32 就是 2^32
-        }
+
+        ulong high = p4 + (middle >> 32);
+        high += carry;
         return high;
     }
 
