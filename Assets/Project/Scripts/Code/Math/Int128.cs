@@ -79,17 +79,18 @@ public readonly struct Int128
     public static Int128 operator *(Int128 a, Int128 b)
     {
         ulong lowResult;
-        ulong highOfLowProduct = BigMul(a.low64, b.low64, out lowResult);
+        ulong carry = BigMul(a.low64, b.low64, out lowResult);//完整128的低位64 已经在lowResult carry是溢出的进位 表示有N个low.max+1
 
-        // 步骤 2 & 3: 计算两个交叉项
         // 注意：这里需要将 ulong 转为 long 进行有符号乘法
         long crossProduct1 = (long)a.low64 * b.high64;
         long crossProduct2 = a.high64 * (long)b.low64;
 
-        // 步骤 4: 将所有 high 部分加起来
+        //a * b = a.high * b.high << 128 + 交叉相乘 << 64 + a.low * b.low //交叉相乘位移位数取决于low的位数
+
+        // 步骤 4: 将所有 high 部分加起来   a.high * b.high溢出128位 直接丢弃
         // 最终的 high = (a.low*b.low的高位) + (a.low*b.high) + (a.high*b.low)
         // 注意：highOfLowProduct 是 ulong，需要转为 long 才能和另外两个 long 相加
-        long finalHigh = (long)highOfLowProduct + crossProduct1 + crossProduct2;
+        long finalHigh = (long)carry + crossProduct1 + crossProduct2;
 
         return new Int128(finalHigh, lowResult);
     }
