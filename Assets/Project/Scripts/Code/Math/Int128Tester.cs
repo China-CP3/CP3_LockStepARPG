@@ -1,84 +1,58 @@
-// 文件名: Int128Tester.cs
 using UnityEngine;
 
 public class Int128Tester : MonoBehaviour
 {
     void Start()
     {
-        Debug.Log("========== 开始 Int128 乘法测试 ==========");
-        RunAllMultiplicationTests();
-        Debug.Log("========== 所有测试已完成 ==========");
+        Debug.Log("--- Int128 Left Shift (<<) Final Corrected Test Suite v2 ---");
+
+        // ... 其他测试保持不变 ...
+        TestShift(new Int128(0x1234, 0x5678), 0, new Int128(0x1234, 0x5678), "Test 1: shift == 0");
+        TestShift(new Int128(0, 0x8000_0000_0000_0000), 1, new Int128(1, 0), "Test 2: shift < 64 (low to high carry)");
+        TestShift(new Int128(0x1122_3344_5566_7788, 0x99AA_BBCC_DDEE_FF00), 8, new Int128(0x2233_4455_6677_8899, 0xAABB_CCDD_EEFF_0000), "Test 3: shift < 64 (general)");
+        TestShift(new Int128(0x1234, 0xABCD_EF01_2345_6789), 64, new Int128(unchecked((long)0xABCD_EF01_2345_6789), 0), "Test 4: shift == 64");
+        TestShift(new Int128(0, 0x00FF_EEDD_CCBB_AA99), 72, new Int128(unchecked((long)0xFFEEDDCCBBAA9900), 0), "Test 5: shift > 64");
+
+        // Test 6: 修正了预期值！
+        // 输入的最高位(bit 63)左移127位后，会超出128位范围，所以结果是0。
+        TestShift(
+            new Int128(0, 0x8000_0000_0000_0000), 127,
+            Int128.Zero, // <-- 修正后的正确预期值
+            "Test 6: shift > 64 (bit shifted out of bounds)"
+        );
+
+        // 额外增加一个测试，来验证我之前意图的场景
+        TestShift(
+            new Int128(0, 1), 127,
+            new Int128(long.MinValue, 0), // 1 左移 127 位，会到达符号位
+            "Test 6b: shift > 64 (1 shifted to sign bit)"
+        );
+
+        // ... 其他测试保持不变 ...
+        TestShift(new Int128(long.MaxValue, ulong.MaxValue), 128, Int128.Zero, "Test 7: shift >= 128");
+        TestShift(new Int128(long.MaxValue, ulong.MaxValue), 200, Int128.Zero, "Test 8: shift > 128");
+
+        Debug.Log("--- Test Suite Finished ---");
     }
 
-    void RunAllMultiplicationTests()
+    // 辅助函数无需改动
+    void TestShift(Int128 value, int shift, Int128 expected, string testName)
     {
-        // --- 基础测试 ---
-        RunTest("2 * 3", new Int128(2), new Int128(3), new Int128(6));
-        RunTest("(-2) * 3", new Int128(-2), new Int128(3), new Int128(-6));
-        RunTest("2 * (-3)", new Int128(2), new Int128(-3), new Int128(-6));
-        RunTest("(-2) * (-3)", new Int128(-2), new Int128(-3), new Int128(6));
+        Debug.Log($"--- {testName} ---");
+        Debug.Log($"Original: {value.ToString()} << {shift}");
 
-        // --- 零、一、负一 测试 ---
-        RunTest("MaxValue * 0", Int128.MaxValue, Int128.Zero, Int128.Zero);
-        RunTest("MinValue * 1", Int128.MinValue, Int128.One, Int128.MinValue);
-        RunTest("MaxValue * (-1)", Int128.MaxValue, Int128.MinusOne, -Int128.MaxValue);
+        Int128 actual = value << shift;
 
-        // --- 边界和溢出测试 (long 范围) ---
-        Int128 longMax = new Int128(long.MaxValue);
-        Int128 longMin = new Int128(long.MinValue);
-
-        // long.MaxValue * 2 = (2^63 - 1) * 2 = 2^64 - 2.
-        // High: 1, Low: ulong.MaxValue - 1
-        RunTest("long.MaxValue * 2", longMax, new Int128(2), new Int128(0, ulong.MaxValue - 1));
-
-        // long.MinValue * 2 = (-2^63) * 2 = -2^64.
-        // High: -1, Low: 0
-        RunTest("long.MinValue * 2", longMin, new Int128(2), new Int128(-1, 0));
-
-        // long.MaxValue * long.MaxValue = (2^63-1)^2 = 2^126 - 2*2^63 + 1 = 2^126 - 2^64 + 1
-        // 这是一个正数，但 high 部分会是 0x3FFFFFFFFFFFFFFF
-        RunTest("long.MaxValue * long.MaxValue", longMax, longMax, new Int128(0x3FFFFFFFFFFFFFFF, 1));
-
-        // --- 边界和溢出测试 (Int128 范围) ---
-
-        // MaxValue * 2. 结果应该是 -2
-        // (2^127-1)*2 = 2^128 - 2. 在128位有符号数中，2^128被截断，结果是 -2
-        RunTest("Int128.MaxValue * 2", Int128.MaxValue, new Int128(2), new Int128(-2));
-
-        // MinValue * MinValue = (-2^127) * (-2^127) = 2^254.
-        // 结果远远超出128位，所有128位都将被清零。
-        RunTest("Int128.MinValue * Int128.MinValue", Int128.MinValue, Int128.MinValue, Int128.Zero);
-
-        // --- 交叉项测试 ---
-        // (2^64 + 1) * (2^64 + 1)
-        // = (2^64)^2 + 2*2^64 + 1.
-        // 2^128 (溢出) + 2^65 + 1.
-        // 2^65 = High: 2, Low: 0.  所以结果是 High: 2, Low: 1.
-        Int128 twoPow64Plus1 = new Int128(1, 1);
-        RunTest("(2^64+1) * (2^64+1)", twoPow64Plus1, twoPow64Plus1, new Int128(2, 1));
-
-        // (2^64 - 1) * (2^64 + 1) = (2^64)^2 - 1 = 2^128 - 1.
-        // 在128位有符号数中，这是 -1.
-        Int128 twoPow64Minus1 = new Int128(0, ulong.MaxValue);
-        RunTest("(2^64-1) * (2^64+1)", twoPow64Minus1, twoPow64Plus1, Int128.MinusOne);
-    }
-
-    /// <summary>
-    /// 运行单个测试用例并打印结果
-    /// </summary>
-    private void RunTest(string testName, Int128 a, Int128 b, Int128 expected)
-    {
-        Int128 actual = a * b;
         if (actual == expected)
         {
-            Debug.Log($"<color=green>[通过]</color> {testName}");
+            Debug.Log($"<color=green>PASSED</color>: Result is {actual.ToString()}");
         }
         else
         {
-            Debug.LogError($"<color=red>[失败]</color> {testName}\n" +
-                           $"       操作: {a} * {b}\n" +
-                           $"       预期值: {expected}\n" +
-                           $"       实际值: {actual}");
+            Debug.Log($"<color=red>FAILED</color>");
+            Debug.Log($"  Expected: {expected.ToString()}");
+            Debug.Log($"  Actual:   {actual.ToString()}");
         }
+        Debug.Log("--------------------------");
     }
 }
