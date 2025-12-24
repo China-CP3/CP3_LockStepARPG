@@ -90,7 +90,7 @@ public readonly struct Int128
         // 步骤 4: 将所有 high 部分加起来   a.high * b.high溢出128位 直接丢弃
         // 最终的 high = (a.low*b.low的高位) + (a.low*b.high) + (a.high*b.low)
         // 注意：highOfLowProduct 是 ulong，需要转为 long 才能和另外两个 long 相加
-        long finalHigh = (long)carry + crossProduct1 + crossProduct2;
+        long finalHigh = (long)carry + crossProduct1 + crossProduct2;//2个高位相乘 已经溢出128位了 直接不需要了
 
         return new Int128(finalHigh, lowResult);
     }
