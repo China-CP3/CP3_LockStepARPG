@@ -148,7 +148,7 @@ public readonly struct Int128
     //}
     #endregion
 
-    #region 重载运算符 == != > < <= >= ~
+    #region 重载运算符 == != > < <= >= ~ << >>
     public static bool operator ==(Int128 a, Int128 b)
     {
         return a.high64 == b.high64 && a.low64 == b.low64;
@@ -182,6 +182,31 @@ public readonly struct Int128
     public static Int128 operator ~(Int128 a)
     {
         return new Int128(~a.high64, ~a.low64);
+    }
+
+    public static Int128 operator <<(Int128 a, int shift)
+    {
+        if (shift == 0) return a;
+        if (shift >= 128) return Zero;
+        if (shift == 64) return new Int128((long)a.low64,0);
+        if (shift < 64)
+        {
+            ulong caryy = a.low64 >> (64 - shift);//low本身就是ulong 这里是为了计算出需要进位多少 如果改成long 最高位万一是1就会被识别成负数 然后右移 就会在最高位添加1  导致值彻底错了
+            long newHigh = a.high64 << shift;
+            newHigh = newHigh | (long)caryy;
+            return new Int128(newHigh,a.low64 << shift);
+        }
+        if(shift > 64)
+        {
+            long newHigh = (long)(a.low64 << (shift - 64));//移动64位刚好把low变成high  shift-64剩下的 才是新high需要位移的数
+            return new Int128(newHigh, 0);
+        }
+        return Zero;
+    }
+
+    public static Int128 operator >>(Int128 a, int shift)
+    {
+        return new Int128(0);
     }
     #endregion
 }
