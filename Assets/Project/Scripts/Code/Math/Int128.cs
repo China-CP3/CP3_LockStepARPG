@@ -140,6 +140,8 @@ public readonly struct Int128
         return high;
     }
 
+    //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
+    //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
     //public static Int128 operator -(Int128 a, Int128 b)
     //{
 
