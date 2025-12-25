@@ -168,6 +168,12 @@ public readonly struct Int128
         return isPlus ? quotient:-quotient;
     }
 
+    //取模运算
+    //public static Int128 UnsignedDivRem()
+    //{
+
+    //}
+
     /// <summary>
     /// 无符号128位除法 (dividend / divisor)。
     /// 除法和取模运算的核心。
