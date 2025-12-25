@@ -142,10 +142,23 @@ public readonly struct Int128
 
     //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
     //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
-    //public static Int128 operator -(Int128 a, Int128 b)
-    //{
+    
+    public static Int128 operator /(Int128 a, Int128 b)
+    {
+        if(b == Zero)
+        {
+            throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
+        }
 
-    //}
+        //10 / 2 = 5 -10 / 2 = -5 10 / -2 = -5 -10 / -2 = 5 很明显 双方符号不同时才是负数 相同时是正数
+        //一开始就可以取得符号 然后双方按正数处理 最后结果加上符号 这样更方便
+        bool isPlus = (a.high64 >= 0 && b.high64 >= 0) || (a.high64 < 0 && b.high64 < 0);
+
+        Int128 aAbs = a.high64 < 0 ? -a : a;
+        Int128 bAbs = b.high64 < 0 ? -b : b;
+
+        return Zero;
+    }
     #endregion
 
     #region 重载运算符 == != > < <= >= ~ << >>
