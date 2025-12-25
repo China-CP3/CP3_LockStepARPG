@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -41,7 +42,6 @@ public readonly struct Int128
         high64 = 0; // ulong 永远是正数，所以 High 部分永远是 0
     }
     #endregion
-
 
     #region 常用接口
     public override string ToString()
@@ -150,6 +150,12 @@ public readonly struct Int128
             throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
         }
 
+        // C# 内置的 Int128 在这种情况下会抛出 OverflowException。
+        if (a == MinValue && b == MinusOne)
+        {
+            return MinValue;
+        }
+
         //10 / 2 = 5 -10 / 2 = -5 10 / -2 = -5 -10 / -2 = 5 很明显 双方符号不同时才是负数 相同时是正数
         //一开始就可以取得符号 然后双方按正数处理 最后结果加上符号 这样更方便
         bool isPlus = (a.high64 >= 0 && b.high64 >= 0) || (a.high64 < 0 && b.high64 < 0);
@@ -157,7 +163,70 @@ public readonly struct Int128
         Int128 aAbs = a.high64 < 0 ? -a : a;
         Int128 bAbs = b.high64 < 0 ? -b : b;
 
-        return Zero;
+        Int128 quotient = UnsignedDivide(aAbs, bAbs);
+
+        return isPlus ? quotient:-quotient;
+    }
+
+    /// <summary>
+    /// 无符号128位除法 (dividend / divisor)。
+    /// 除法和取模运算的核心。
+    /// </summary>
+    /// <param name="a">被除数 (必须为正数)</param>
+    /// <param name="b">除数 (必须为正数)</param>
+    /// <returns>商</returns>
+    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+    {
+        if (UnsignedCompareTo(b, a) > 0)
+        {
+            return Zero;
+        }
+
+        if (b == a)
+        {
+            return One;
+        }
+
+        Int128 quotient = Zero;//商
+        Int128 remainder = Zero;//余数
+
+        //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
+        //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
+        for (int i = 0; i < 128; i++)
+        {
+            quotient = quotient << 1;
+            remainder = remainder << 1;
+
+            if (((ulong)a.high64 & 0x8000000000000000) != 0)//掩码 是1000...0000 这样和a.high逻辑与运算 只会得到a.high的最高位是1或0
+            {
+                remainder = new Int128(remainder.high64, remainder.low64 | 1);//不需要考虑进位 开头把remainder左移了1位 末尾必定是0  和1逻辑或运算 只会让末尾变成0或1 不影响其他位
+            }
+
+            a = a << 1;
+
+            if(UnsignedCompareTo(remainder, b) >= 0)
+            {
+                remainder = remainder - b;
+                quotient = new Int128(quotient.high64, quotient.low64 | 1);
+            }
+        }
+
+        return quotient;
+    }
+
+    /// <summary>
+    /// 对两个 Int128 值进行无符号比较。
+    /// </summary>
+    /// <returns>-1 a < b; 0 a == b; 1 a > b</returns>
+    private static int UnsignedCompareTo(Int128 a, Int128 b)
+    {
+        // 关键：将 high64 强制转换为 ulong 进行无符号比较
+        int highCompare = ((ulong)a.high64).CompareTo((ulong)b.high64);
+        if (highCompare != 0)
+        {
+            return highCompare;
+        }
+        return a.low64.CompareTo(b.low64);
     }
     #endregion
 
@@ -237,4 +306,32 @@ public readonly struct Int128
         return Zero;
     }
     #endregion
+
+    #region 隐式转换
+    public static implicit operator Int128(long value) => new Int128(value);
+    public static implicit operator Int128(int value) => new Int128(value);
+    #endregion
+
+    public BigInteger ToBigInteger()
+    {
+        // BigInteger的构造函数接受一个字节数组。
+        // 我们需要创建一个17字节的数组来表示128位数。
+        // 16个字节用于数据 (low64 + high64)，最后一个字节用于符号。
+        byte[] bytes = new byte[17];
+
+        // 使用 Buffer.BlockCopy 高效地将 ulong 和 long 复制到字节数组中
+        // 1. 复制低64位
+        Buffer.BlockCopy(BitConverter.GetBytes(low64), 0, bytes, 0, 8);
+        // 2. 复制高64位
+        Buffer.BlockCopy(BitConverter.GetBytes((ulong)high64), 0, bytes, 8, 8);
+
+        // 3. 处理符号。如果我们的数是负数 (high64 < 0)，
+        //    BigInteger 要求最后一个字节为 0xFF 来表示负号。
+        if (high64 < 0)
+        {
+            bytes[16] = 0xFF;
+        }
+
+        return new BigInteger(bytes);
+    }
 }
