@@ -206,7 +206,22 @@ public readonly struct Int128
 
     public static Int128 operator >>(Int128 a, int shift)
     {
-        return new Int128(0);
+        bool isPlus = !(a.high64 < 0);
+        if (shift == 0) return a;
+        if (shift >= 128) return isPlus ? Zero:MinusOne;
+        if (shift == 64) return new Int128(isPlus ? 0L:-1L, (ulong)a.high64);
+        if (shift < 64)
+        {
+            ulong caryy = (ulong)a.high64 << (64 - shift);
+            ulong newLow = a.low64 >> shift | caryy;
+            return new Int128(a.high64 >> shift, newLow);
+        }
+        if (shift > 64)
+        {
+            ulong newLow = (ulong)(a.high64 >> (shift - 64));
+            return new Int128(isPlus ? 0L : -1L, newLow);
+        }
+        return Zero;
     }
     #endregion
 }
