@@ -116,7 +116,7 @@ public readonly struct Int128
          
         //交叉相乘 a * b = (aHigh * bHigh * 2^64) + (aHigh * bLow * 2^32) + (aLow * bHigh * 2^32) + (aLow * bLow)
         //p4 * 2^64 + (p2+p3) * 2^32 + p1
-        ulong p1 = aLow * bLow;
+        ulong p1 = aLow * bLow;//这里为什么不需要处理进位  因为p1是64位 就算是2个32位相乘 也装得下
         ulong p2 = aLow * bHigh;
         ulong p3 = aHigh * bLow;
         ulong p4 = aHigh * bHigh;
