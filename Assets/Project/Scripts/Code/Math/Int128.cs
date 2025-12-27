@@ -317,27 +317,4 @@ public readonly struct Int128
     public static implicit operator Int128(long value) => new Int128(value);
     public static implicit operator Int128(int value) => new Int128(value);
     #endregion
-
-    public BigInteger ToBigInteger()
-    {
-        // BigInteger的构造函数接受一个字节数组。
-        // 我们需要创建一个17字节的数组来表示128位数。
-        // 16个字节用于数据 (low64 + high64)，最后一个字节用于符号。
-        byte[] bytes = new byte[17];
-
-        // 使用 Buffer.BlockCopy 高效地将 ulong 和 long 复制到字节数组中
-        // 1. 复制低64位
-        Buffer.BlockCopy(BitConverter.GetBytes(low64), 0, bytes, 0, 8);
-        // 2. 复制高64位
-        Buffer.BlockCopy(BitConverter.GetBytes((ulong)high64), 0, bytes, 8, 8);
-
-        // 3. 处理符号。如果我们的数是负数 (high64 < 0)，
-        //    BigInteger 要求最后一个字节为 0xFF 来表示负号。
-        if (high64 < 0)
-        {
-            bytes[16] = 0xFF;
-        }
-
-        return new BigInteger(bytes);
-    }
 }
