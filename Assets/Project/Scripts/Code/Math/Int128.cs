@@ -79,7 +79,7 @@ public readonly struct Int128
     public static Int128 operator *(Int128 a, Int128 b)
     {
         ulong lowResult;
-        ulong carry = BigMul(a.low64, b.low64, out lowResult);//完整128的低位64 已经在lowResult carry是溢出的进位 表示有N个low.max+1
+        ulong carry = BigMul(a.low64, b.low64, out lowResult);//carry是溢出的进位 表示有N个low.max+1
 
         // 注意：这里需要将 ulong 转为 long 进行有符号乘法
         long crossProduct1 = (long)a.low64 * b.high64;
