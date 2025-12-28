@@ -287,9 +287,9 @@ public readonly struct Int128
         if (shift == 64) return new Int128((long)a.low64,0);
         if (shift < 64)
         {
-            ulong caryy = a.low64 >> (64 - shift);//low本身就是ulong 这里是为了计算出需要进位多少 如果改成long 最高位万一是1就会被识别成负数 然后右移 就会在最高位添加1  导致值彻底错了
+            ulong carry = a.low64 >> (64 - shift);//low本身就是ulong 这里是为了计算出需要进位多少 如果改成long 最高位万一是1就会被识别成负数 然后右移 就会在最高位添加1  导致值彻底错了
             long newHigh = a.high64 << shift;
-            newHigh = newHigh | (long)caryy;
+            newHigh = newHigh | (long)carry;
             return new Int128(newHigh,a.low64 << shift);
         }
         if(shift > 64)
@@ -308,8 +308,8 @@ public readonly struct Int128
         if (shift == 64) return new Int128(isPlus ? 0L:-1L, (ulong)a.high64);
         if (shift < 64)
         {
-            ulong caryy = (ulong)a.high64 << (64 - shift);
-            ulong newLow = a.low64 >> shift | caryy;
+            ulong carry = (ulong)a.high64 << (64 - shift);
+            ulong newLow = a.low64 >> shift | carry;
             return new Int128(a.high64 >> shift, newLow);
         }
         if (shift > 64)
