@@ -104,10 +104,10 @@ public readonly struct Int128
         //计算 12 * 34，把它拆成 (10+2) * (30+4)，然后计算 2*4, 2*30, 10*4, 10*30，最后加起来
         //aHigh = 1, aLow = 2
         //bHigh = 3, bLow = 4
-        //p1 = aLow * bLow; -> 2 * 4 = 8。（个位乘以个位）
-        //p2 = aLow * bHigh; -> 2 * 3 = 6。（a的个位* b的十位）
-        //p3 = aHigh * bLow; -> 1 * 4 = 4。（a的十位* b的个位）
-        //p4 = aHigh * bHigh; -> 1 * 3 = 3。（十位乘以十位）
+        //p1 = aLow * bLow; -> 2 * 4 = 8
+        //p2 = aLow * bHigh; -> 2 * 3 = 6
+        //p3 = aHigh * bLow; -> 1 * 4 = 4
+        //p4 = aHigh * bHigh; -> 1 * 3 = 3
 
         //8 是个位。
         //6 和 4 都是十位上的，6 + 4 = 10 表示有 10 个“十”。
