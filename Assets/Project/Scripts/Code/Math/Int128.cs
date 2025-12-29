@@ -113,7 +113,7 @@ public readonly struct Int128
         //6 和 4 都是十位上的，6 + 4 = 10 表示有 10 个“十”。
         //3 是百位上的。
         //所以结果是：3 * 10 * 10 + 10 * 10 + 8 = 300 + 100 + 8 = 408。
-         
+
         //交叉相乘 a * b = (aHigh * bHigh * 2^64) + (aHigh * bLow * 2^32) + (aLow * bHigh * 2^32) + (aLow * bLow)
         //p4 * 2^64 + (p2+p3) * 2^32 + p1
         ulong p1 = aLow * bLow;//这里为什么不需要处理进位  因为p1是64位 就算是2个32位相乘 也装得下
@@ -141,10 +141,10 @@ public readonly struct Int128
 
     //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
     //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
-    
+
     public static Int128 operator /(Int128 a, Int128 b)
     {
-        if(b == Zero)
+        if (b == Zero)
         {
             throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
         }
@@ -164,39 +164,44 @@ public readonly struct Int128
 
         Int128 quotient = UnsignedDivide(aAbs, bAbs);
 
-        return isPlus ? quotient:-quotient;
+        return isPlus ? quotient : -quotient;
     }
 
     //取模运算
-    //public static Int128 UnsignedDivRem()
-    //{
+    public static Int128 operator %(Int128 a, Int128 b)
+    {
+        if (b == Zero)
+        {
+            throw new System.DivideByZeroException("Attempted to divide by zero.");
+        }
 
-    //}
+        // 取模的符号规则：结果的符号和被除数 a 保持一致
+        bool isNegative = a.high64 < 0;
 
-    /// <summary>
-    /// 无符号128位除法 (dividend / divisor)。
-    /// 除法和取模运算的核心。
-    /// </summary>
-    /// <param name="a">被除数 (必须为正数)</param>
-    /// <param name="b">除数 (必须为正数)</param>
-    /// <returns>商</returns>
-    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+        Int128 aAbs = a.high64 < 0 ? -a : a;
+        Int128 bAbs = b.high64 < 0 ? -b : b;
+
+        UnsignedDivRem(aAbs, bAbs, out Int128 remainder);
+
+        return isNegative ? -remainder : remainder;
+    }
+
+    private static Int128 UnsignedDivRem(Int128 a, Int128 b, out Int128 remainder)
     {
         if (UnsignedCompareTo(b, a) > 0)
         {
+            remainder = a; // 如果被除数小于除数，商是0，余数是被除数本身
             return Zero;
         }
-
         if (b == a)
         {
+            remainder = Zero; // 如果相等，商是1，余数是0
             return One;
         }
 
-        Int128 quotient = Zero;//商
-        Int128 remainder = Zero;//余数
+        Int128 quotient = Zero;
 
-        //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
-        //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
+        remainder = Zero;
         for (int i = 0; i < 128; i++)
         {
             quotient = quotient << 1;
@@ -209,7 +214,7 @@ public readonly struct Int128
 
             a = a << 1;
 
-            if(UnsignedCompareTo(remainder, b) >= 0)
+            if (UnsignedCompareTo(remainder, b) >= 0)
             {
                 remainder = remainder - b;
                 quotient = new Int128(quotient.high64, quotient.low64 | 1);
@@ -217,6 +222,18 @@ public readonly struct Int128
         }
 
         return quotient;
+    }
+
+    /// <summary>
+    /// 无符号128位除法 (dividend / divisor)。
+    /// 除法和取模运算的核心。
+    /// </summary>
+    /// <param name="a">被除数 (必须为正数)</param>
+    /// <param name="b">除数 (必须为正数)</param>
+    /// <returns>商</returns>
+    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+    {
+        return UnsignedDivRem(a, b, out _);
     }
 
     /// <summary>
@@ -275,15 +292,15 @@ public readonly struct Int128
     {
         if (shift == 0) return a;
         if (shift >= 128) return Zero;
-        if (shift == 64) return new Int128((long)a.low64,0);
+        if (shift == 64) return new Int128((long)a.low64, 0);
         if (shift < 64)
         {
             ulong caryy = a.low64 >> (64 - shift);//low本身就是ulong 这里是为了计算出需要进位多少 如果改成long 最高位万一是1就会被识别成负数 然后右移 就会在最高位添加1  导致值彻底错了
             long newHigh = a.high64 << shift;
             newHigh = newHigh | (long)caryy;
-            return new Int128(newHigh,a.low64 << shift);
+            return new Int128(newHigh, a.low64 << shift);
         }
-        if(shift > 64)
+        if (shift > 64)
         {
             long newHigh = (long)(a.low64 << (shift - 64));//移动64位刚好把low变成high  shift-64剩下的 才是新high需要位移的数
             return new Int128(newHigh, 0);
@@ -295,8 +312,8 @@ public readonly struct Int128
     {
         bool isPlus = !(a.high64 < 0);
         if (shift == 0) return a;
-        if (shift >= 128) return isPlus ? Zero:MinusOne;
-        if (shift == 64) return new Int128(isPlus ? 0L:-1L, (ulong)a.high64);
+        if (shift >= 128) return isPlus ? Zero : MinusOne;
+        if (shift == 64) return new Int128(isPlus ? 0L : -1L, (ulong)a.high64);
         if (shift < 64)
         {
             ulong caryy = (ulong)a.high64 << (64 - shift);
