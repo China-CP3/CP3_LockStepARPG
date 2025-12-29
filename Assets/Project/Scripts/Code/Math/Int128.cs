@@ -168,35 +168,40 @@ public readonly struct Int128
     }
 
     //取模运算
-    //public static Int128 UnsignedDivRem()
-    //{
+    public static Int128 operator %(Int128 a, Int128 b)
+    {
+        if (b == Zero)
+        {
+            throw new System.DivideByZeroException("Attempted to divide by zero.");
+        }
 
-    //}
+        // 取模的符号规则：结果的符号和被除数 a 保持一致
+        bool isNegative = a.high64 < 0;
 
-    /// <summary>
-    /// 无符号128位除法 (dividend / divisor)。
-    /// 除法和取模运算的核心。
-    /// </summary>
-    /// <param name="a">被除数 (必须为正数)</param>
-    /// <param name="b">除数 (必须为正数)</param>
-    /// <returns>商</returns>
-    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+        Int128 aAbs = a.high64 < 0 ? -a : a;
+        Int128 bAbs = b.high64 < 0 ? -b : b;
+
+        UnsignedDivRem(aAbs, bAbs, out Int128 remainder);
+
+        return isNegative ? -remainder : remainder;
+    }
+
+    private static Int128 UnsignedDivRem(Int128 a, Int128 b, out Int128 remainder)
     {
         if (UnsignedCompareTo(b, a) > 0)
         {
+            remainder = a; // 如果被除数小于除数，商是0，余数是被除数本身
             return Zero;
         }
-
         if (b == a)
         {
+            remainder = Zero; // 如果相等，商是1，余数是0
             return One;
         }
 
-        Int128 quotient = Zero;//商
-        Int128 remainder = Zero;//余数
+        Int128 quotient = Zero;
 
-        //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
-        //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
+        remainder = Zero;
         for (int i = 0; i < 128; i++)
         {
             quotient = quotient << 1;
@@ -209,7 +214,7 @@ public readonly struct Int128
 
             a = a << 1;
 
-            if(UnsignedCompareTo(remainder, b) >= 0)
+            if (UnsignedCompareTo(remainder, b) >= 0)
             {
                 remainder = remainder - b;
                 quotient = new Int128(quotient.high64, quotient.low64 | 1);
@@ -217,6 +222,18 @@ public readonly struct Int128
         }
 
         return quotient;
+    }
+
+    /// <summary>
+    /// 无符号128位除法 (dividend / divisor)。
+    /// 除法和取模运算的核心。
+    /// </summary>
+    /// <param name="a">被除数 (必须为正数)</param>
+    /// <param name="b">除数 (必须为正数)</param>
+    /// <returns>商</returns>
+    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+    {
+        return UnsignedDivRem(a, b, out _);
     }
 
     /// <summary>
