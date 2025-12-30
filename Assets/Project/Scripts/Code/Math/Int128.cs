@@ -151,6 +151,13 @@ public readonly struct Int128
     //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
     //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
     
+    /// <summary>
+    /// a/b
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    /// <exception cref="System.DivideByZeroException"></exception>
     public static Int128 operator /(Int128 a, Int128 b)
     {
         if(b == Zero)
@@ -204,6 +211,7 @@ public readonly struct Int128
     /// <returns>商</returns>
     private static void UnsignedDivRem(Int128 a, Int128 b, out Int128 quotientParam, out Int128 remainderParam)
     {
+        //分母大于分子的情况
         if (UnsignedCompareTo(b, a) > 0)
         {
             quotientParam = Zero;
@@ -244,7 +252,7 @@ public readonly struct Int128
     }
 
     /// <summary>
-    /// 对两个 Int128 值进行无符号比较。
+    /// 对两个 Int128 值进行无符号比较
     /// </summary>
     /// <returns>-1 a < b; 0 a == b; 1 a > b</returns>
     private static int UnsignedCompareTo(Int128 a, Int128 b)
