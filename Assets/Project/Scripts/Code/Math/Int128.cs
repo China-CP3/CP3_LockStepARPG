@@ -321,6 +321,23 @@ public readonly struct Int128
     }
     #endregion
 
+    #region 位逻辑运算 & | ^
+    public static Int128 operator &(Int128 a, Int128 b)
+    {
+        return new Int128(a.high64 & b.high64, a.low64 & b.low64);
+    }
+
+    public static Int128 operator |(Int128 a, Int128 b)
+    {
+        return new Int128(a.high64 | b.high64, a.low64 | b.low64);
+    }
+
+    public static Int128 operator ^(Int128 a, Int128 b)
+    {
+        return new Int128(a.high64 ^ b.high64, a.low64 ^ b.low64);
+    }
+    #endregion
+
     #region 隐式转换
     public static implicit operator Int128(long value) => new Int128(value);
     public static implicit operator Int128(int value) => new Int128(value);
