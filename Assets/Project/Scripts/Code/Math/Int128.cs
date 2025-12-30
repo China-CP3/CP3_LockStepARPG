@@ -171,16 +171,29 @@ public readonly struct Int128
         Int128 aAbs = a.high64 < 0 ? -a : a;
         Int128 bAbs = b.high64 < 0 ? -b : b;
 
-        Int128 quotient = UnsignedDivide(aAbs, bAbs);
+        UnsignedDivRem(aAbs, bAbs, out Int128 quotient,out Int128 remainder);
 
         return isPlus ? quotient:-quotient;
     }
 
-    //取模运算
-    //public static Int128 UnsignedDivRem()
-    //{
+    //模运算
+    public static Int128 operator %(Int128 a, Int128 b)
+    {
+        if (b == Zero) throw new DivideByZeroException("Int128 a % b b is 0 !!!");
 
-    //}
+        // 处理特殊溢出情况
+        if (a == MinValue && b == MinusOne) return Zero;
+
+        // 余数的符号通常跟随被除数 (a)
+        // 10 % 3 = 1;  -10 % 3 = -1;  10 % -3 = 1;
+
+        Int128 aAbs = a.high64 < 0 ? -a : a;
+        Int128 bAbs = b.high64 < 0 ? -b : b;
+
+        UnsignedDivRem(aAbs, bAbs, out Int128 quotient, out Int128 remainder);
+
+        return (a.high64 < 0) ? -remainder : remainder;
+    }
 
     /// <summary>
     /// 无符号128位除法 (dividend / divisor)。
@@ -189,43 +202,45 @@ public readonly struct Int128
     /// <param name="a">被除数 (必须为正数)</param>
     /// <param name="b">除数 (必须为正数)</param>
     /// <returns>商</returns>
-    private static Int128 UnsignedDivide(Int128 a, Int128 b)
+    private static void UnsignedDivRem(Int128 a, Int128 b, out Int128 quotientParam, out Int128 remainderParam)
     {
         if (UnsignedCompareTo(b, a) > 0)
         {
-            return Zero;
+            quotientParam = Zero;
+            remainderParam = a;
+            return;
         }
 
         if (b == a)
         {
-            return One;
+            quotientParam = One;
+            remainderParam = Zero;
+            return;
         }
 
-        Int128 quotient = Zero;//商
-        Int128 remainder = Zero;//余数
+        quotientParam = Zero;//商
+        remainderParam = Zero;//余数
 
         //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
         //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
         for (int i = 0; i < 128; i++)
         {
-            quotient = quotient << 1;
-            remainder = remainder << 1;
+            quotientParam = quotientParam << 1;
+            remainderParam = remainderParam << 1;
 
             if (((ulong)a.high64 & 0x8000000000000000) != 0)//掩码 是1000...0000 这样和a.high逻辑与运算 只会得到a.high的最高位是1或0
             {
-                remainder = new Int128(remainder.high64, remainder.low64 | 1);//不需要考虑进位 开头把remainder左移了1位 末尾必定是0  和1逻辑或运算 只会让末尾变成0或1 不影响其他位
+                remainderParam = new Int128(remainderParam.high64, remainderParam.low64 | 1);//不需要考虑进位 开头把remainder左移了1位 末尾必定是0  和1逻辑或运算 只会让末尾变成0或1 不影响其他位
             }
 
             a = a << 1;
 
-            if(UnsignedCompareTo(remainder, b) >= 0)
+            if(UnsignedCompareTo(remainderParam, b) >= 0)
             {
-                remainder = remainder - b;
-                quotient = new Int128(quotient.high64, quotient.low64 | 1);
+                remainderParam = remainderParam - b;
+                quotientParam = new Int128(quotientParam.high64, quotientParam.low64 | 1);
             }
         }
-
-        return quotient;
     }
 
     /// <summary>
