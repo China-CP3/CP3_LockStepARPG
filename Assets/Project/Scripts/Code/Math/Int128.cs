@@ -62,7 +62,7 @@ public readonly struct Int128 : IEquatable<Int128>
 
     public override int GetHashCode()
     {
-        // 使用异或 (^) 混合高位和低位的哈希值，简单且高效
+        // 使用异或 (^) 混合高位和低位的哈希值，简单且高效  适合需要多个字段比较的时候 单字段直接调用.GetHash
         return high64.GetHashCode() ^ low64.GetHashCode();
     }
     #endregion
