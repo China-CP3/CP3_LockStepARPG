@@ -64,6 +64,10 @@ public readonly struct Int128 : IEquatable<Int128>
     {
         // 使用异或 (^) 混合高位和低位的哈希值，简单且高效  适合需要多个字段比较的时候 单字段直接调用.GetHash
         return high64.GetHashCode() ^ low64.GetHashCode();
+
+        //比简单的异或更均匀，防冲突能力更强 但帧同步不能用下面这个接口
+        //-在 .NET 的实现中，为了防止哈希碰撞攻击（HashDoS），可能会在程序启动时生成一个随机种子(Random Seed)。
+        //return System.HashCode.Combine(high64, low64);
     }
     #endregion
 
