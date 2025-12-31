@@ -5,7 +5,7 @@ using System.Numerics;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public readonly struct Int128
+public readonly struct Int128 : IEquatable<Int128>
 {
     public readonly ulong low64;//ulong不会因为溢出变成负数
     public readonly long high64;//正负由最高位决定
@@ -50,6 +50,21 @@ public readonly struct Int128
         return $"[High: 0x{high64:X16}, Low: 0x{low64:X16}]";
     }
 
+    public bool Equals(Int128 other)
+    {
+        return this.high64 == other.high64 && this.low64 == other.low64;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Int128 other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        // 使用异或 (^) 混合高位和低位的哈希值，简单且高效
+        return high64.GetHashCode() ^ low64.GetHashCode();
+    }
     #endregion
 
     #region 四则运算 +-*/
