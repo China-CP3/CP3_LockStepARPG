@@ -66,7 +66,7 @@ public readonly struct Int128 : IEquatable<Int128>
         return high64.GetHashCode() ^ low64.GetHashCode();
 
         //比简单的异或更均匀，防冲突能力更强 但帧同步不能用下面这个接口
-        //-在 .NET 的实现中，为了防止哈希碰撞攻击（HashDoS），可能会在程序启动时生成一个随机种子(Random Seed)。
+        //在 .NET 的实现中，为了防止哈希碰撞攻击（HashDoS），可能会在程序启动时生成一个随机种子(Random Seed)。
         //return System.HashCode.Combine(high64, low64);
     }
     #endregion
@@ -275,7 +275,7 @@ public readonly struct Int128 : IEquatable<Int128>
     /// </summary>
     private static int UnsignedCompareTo(Int128 a, Int128 b)
     {
-        // 关键：将 high64 强制转换为 ulong 进行无符号比较
+        // 关键：将high64 强制转换为 ulong 进行无符号比较
         int highCompare = ((ulong)a.high64).CompareTo((ulong)b.high64);
         if (highCompare != 0)
         {
