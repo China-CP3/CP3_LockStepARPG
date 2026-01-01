@@ -273,7 +273,6 @@ public readonly struct Int128 : IEquatable<Int128>
     /// <summary>
     /// 对两个 Int128 值进行无符号比较
     /// </summary>
-    /// <returns>-1 a < b; 0 a == b; 1 a > b</returns>
     private static int UnsignedCompareTo(Int128 a, Int128 b)
     {
         // 关键：将 high64 强制转换为 ulong 进行无符号比较
