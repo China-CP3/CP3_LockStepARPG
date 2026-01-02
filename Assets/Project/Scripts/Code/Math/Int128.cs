@@ -71,6 +71,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         //return System.HashCode.Combine(high64, low64);
     }
 
+    //不重写的话 List.Sort() 和 Array.Sort() 报错 他俩不知道如何比较这个Int128
     public int CompareTo(Int128 other)
     {
         int result = high64.CompareTo(other.high64);
