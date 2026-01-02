@@ -5,7 +5,8 @@ using System.Numerics;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public readonly struct Int128 : IEquatable<Int128>
+[Serializable]
+public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 {
     public readonly ulong low64;//ulong不会因为溢出变成负数
     public readonly long high64;//正负由最高位决定
@@ -68,6 +69,18 @@ public readonly struct Int128 : IEquatable<Int128>
         //比简单的异或更均匀，防冲突能力更强 但帧同步不能用下面这个接口
         //在 .NET 的实现中，为了防止哈希碰撞攻击（HashDoS），可能会在程序启动时生成一个随机种子(Random Seed)。
         //return System.HashCode.Combine(high64, low64);
+    }
+
+    public int CompareTo(Int128 other)
+    {
+        int result = high64.CompareTo(other.high64);
+
+        if (result != 0)
+        {
+            return result;
+        }
+
+        return low64.CompareTo(other.low64);
     }
     #endregion
 
@@ -283,6 +296,7 @@ public readonly struct Int128 : IEquatable<Int128>
         }
         return a.low64.CompareTo(b.low64);
     }
+
     #endregion
 
     #region 重载运算符 == != > < <= >= ~ << >>
