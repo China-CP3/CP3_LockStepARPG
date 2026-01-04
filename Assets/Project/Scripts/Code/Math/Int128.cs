@@ -122,7 +122,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     }
 
     /// <summary>
-    /// 返回该值的绝对值。
+    /// 求绝对值。
     /// 注意：MinValue 的绝对值由于溢出，依然会返回 MinValue 本身。
     /// </summary>
     public static Int128 Abs(Int128 value) => value.high64 < 0 ? -value : value;
@@ -234,6 +234,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         return high;
     }
 
+    //除法的核心思想
     //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
     //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
     
