@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -17,6 +16,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     public static readonly Int128 MaxValue = new Int128(long.MaxValue, ulong.MaxValue);
     public static readonly Int128 MinValue = new Int128(long.MinValue, 0);
     public static readonly Int128 MinusOne = new Int128(-1, ulong.MaxValue);
+    private const double TwoToThe64 = 18446744073709551616.0;//2的64次方 就是刚好让64位爆表并向高位进1的值
     #endregion
 
     #region 构造函数
@@ -119,6 +119,22 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         }
 
         return low64.CompareTo(other.low64);
+    }
+
+    /// <summary>
+    /// 返回该值的绝对值。
+    /// 注意：MinValue 的绝对值由于溢出，依然会返回 MinValue 本身。
+    /// </summary>
+    public static Int128 Abs(Int128 value) => value.high64 < 0 ? -value : value;
+
+    /// <summary>
+    /// 返回值的符号：-1 代表负数，0 代表零，1 代表正数。
+    /// </summary>
+    public static int Sign(Int128 value)
+    {
+        if (value.high64 < 0) return -1;
+        if (value.high64 == 0 && value.low64 == 0) return 0;
+        return 1;
     }
     #endregion
 
@@ -243,10 +259,13 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 
         //10 / 2 = 5 -10 / 2 = -5 10 / -2 = -5 -10 / -2 = 5 很明显 双方符号不同时才是负数 相同时是正数
         //一开始就可以取得符号 然后双方按正数处理 最后结果加上符号 这样更方便
-        bool isPlus = (a.high64 >= 0 && b.high64 >= 0) || (a.high64 < 0 && b.high64 < 0);
+        int signA = Sign(a);
+        int signB = Sign(b);
+        bool isPlus = (signA == signB) || (signA == 0);
 
         Int128 aAbs = a.high64 < 0 ? -a : a;
         Int128 bAbs = b.high64 < 0 ? -b : b;
+        
 
         UnsignedDivRem(aAbs, bAbs, out Int128 quotient,out Int128 remainder);
 
@@ -434,5 +453,27 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     #region 隐式转换
     public static implicit operator Int128(long value) => new Int128(value);
     public static implicit operator Int128(int value) => new Int128(value);
+    public static explicit operator long(Int128 value) => (long)value.low64;//高位被丢弃 和C#的long to int一样 低位剩下多少是多少 不管正负数转换
+    public static explicit operator int(Int128 value) => (int)value.low64;
+    public static explicit operator uint(Int128 value) => (uint)value.low64;
+    public static explicit operator ulong(Int128 value) => value.low64;
+    public static explicit operator double(Int128 value)
+    {
+        if (value == Zero) return 0;
+
+        //有个坑负数为Min时 再补码会溢出 用4位举例
+        //最大的正数是 7 (0111) //最小的负数是 - 8(1000)  对1000补码 还是1000 所以要注意这里
+        if (value == MinValue) return (double)MinValue.high64 * TwoToThe64;//得到int128的最小值再转为double 注意 不是double的最小值
+
+        int isPlus = Sign(value);
+        Int128 absValue = isPlus != -1 ? value : -value;
+
+        double highPart = (double)(ulong)absValue.high64 * TwoToThe64;
+        double lowPart = (double)absValue.low64;
+
+        double result = highPart + lowPart;
+
+        return isPlus != -1 ? result : -result;
+    }
     #endregion
 }
