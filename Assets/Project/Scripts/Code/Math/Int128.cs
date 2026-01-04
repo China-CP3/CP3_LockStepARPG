@@ -45,10 +45,47 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     #endregion
 
     #region 常用接口
-    public override string ToString()
+    
+    /// <summary>
+    /// 打印16进制
+    /// </summary>
+    /// <returns></returns>
+    public string ToHexString()
     {
         //用16进制方便看是否计算成功  不然数字太大了看着眼花
         return $"[High: 0x{high64:X16}, Low: 0x{low64:X16}]";
+    }
+
+    /// <summary>
+    /// 打印10进制数
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        if(this == Zero) return "0";
+
+        // 处理 MinValue 的特殊情况（因为它取反会溢出）
+        if (this == MinValue) return "-170141183460469231731687303715884105728";
+
+        var sb = new System.Text.StringBuilder();
+        Int128 current = this;
+
+        Int128 ten = new Int128(10);
+
+        // 循环取余法：不断 % 10 拿到最后一位，然后 / 10 去掉最后一位
+        while (current > Zero)
+        {
+            Int128 remainder = current % ten;        
+            sb.Insert(0, (char)('0' + (int)remainder.low64));// remainder.low64 一定在 0-9 之间，强转 int 安全
+            current = current / ten;
+        }
+
+        if (this < Zero)
+        {
+            sb.Insert(0, '-');
+        }
+
+        return sb.ToString();
     }
 
     public bool Equals(Int128 other)
