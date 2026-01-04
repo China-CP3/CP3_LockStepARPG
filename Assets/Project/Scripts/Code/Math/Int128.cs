@@ -414,7 +414,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 
     public static Int128 operator >>(Int128 a, int shift)
     {
-        bool isPlus = !(a.high64 < 0);
+        bool isPlus = Sign(a) >= 0;
         if (shift == 0) return a;
         if (shift >= 128) return isPlus ? Zero:MinusOne;
         if (shift == 64) return new Int128(isPlus ? 0L:-1L, (ulong)a.high64);
