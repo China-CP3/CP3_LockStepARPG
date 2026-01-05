@@ -234,10 +234,34 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         return high;
     }
 
+    /// <summary>
+    /// 2个long相乘，得到一个int128 比如2个定点数相乘
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    public static Int128 Multiply(long a, long b)
+    {
+        bool isPlus = (a < 0) ^ (b < 0);
+
+        ulong unSignA = a < 0? (ulong)-a : (ulong)a;
+        ulong unSignB = (b < 0) ? (ulong)-b : (ulong)b;
+
+        if (a == long.MinValue) unSignA = 9223372036854775808UL; // 特殊处理 MinValue 不然负数转正数会溢出
+        if (b == long.MinValue) unSignB = 9223372036854775808UL;
+
+        ulong low;
+        ulong high = BigMul(unSignA, unSignB, out low);
+
+        Int128 result = new Int128((long)high, low);
+
+        return isPlus ? result : -result;
+    }
+
     //除法的核心思想
     //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
     //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
-    
+
     /// <summary>
     /// a/b
     /// </summary>
