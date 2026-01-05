@@ -242,20 +242,27 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     /// <returns></returns>
     public static Int128 Multiply(long a, long b)
     {
-        bool isPlus = (a < 0) ^ (b < 0);
+        bool isNegative = (a < 0) ^ (b < 0);
 
-        ulong unSignA = a < 0? (ulong)-a : (ulong)a;
-        ulong unSignB = (b < 0) ? (ulong)-b : (ulong)b;
+        ulong unSignA;
+        ulong unSignB;
 
-        if (a == long.MinValue) unSignA = 9223372036854775808UL; // 特殊处理 MinValue 不然负数转正数会溢出
-        if (b == long.MinValue) unSignB = 9223372036854775808UL;
+        if (a == long.MinValue)
+            unSignA = 9223372036854775808UL; // 显式赋值，一眼就能看懂
+        else
+            unSignA = a < 0 ? (ulong)-a : (ulong)a;
+
+        if (b == long.MinValue)
+            unSignB = 9223372036854775808UL;
+        else
+            unSignB = b < 0 ? (ulong)-b : (ulong)b;
 
         ulong low;
         ulong high = BigMul(unSignA, unSignB, out low);
 
         Int128 result = new Int128((long)high, low);
 
-        return isPlus ? result : -result;
+        return isNegative ? -result : result;
     }
 
     //除法的核心思想
