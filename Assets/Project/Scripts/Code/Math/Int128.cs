@@ -242,18 +242,24 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     /// <returns></returns>
     public static Int128 Multiply(long a, long b)
     {
-        bool isNegative = (a < 0) ^ (b < 0);
+        bool isNegative = (a ^ b) < 0; ;//虽然会得到一个64位的数 但只关心最高位符号位即可 符号位是1 则是负数 说明a和b不同符号
 
         ulong unSignA;
         ulong unSignB;
 
+        //现代计算机都是用补码规则 当最高位为1的时候 这个1不仅代表符号 而且也代表一个值: 所在位数 = X , 值就是2的X次方
+        //但除了最高位按这个规则算 后面的位数得到的值要按整数算
+        //比如1111 (1 * -8) + (1 * 4) + (1 * 2) + (1 * 1) = -8 + 7 = -1
+        //以后看见MinValue取绝对值 第一反应就是会溢出 因为负数的最高位也有值 而正数是0 强行转为绝对值 就会溢出
+        //以后看见有符号整型Minvalue取绝对值 脑海里就想到这个值 会比maxvalue大1    无符号整型和浮点数不受这个规则影响 浮点数可以直接对min取绝对值 因为浮点数的符号位只表示符号不表示值
+
         if (a == long.MinValue)
-            unSignA = 9223372036854775808UL; // 显式赋值，一眼就能看懂
+            unSignA = long.MaxValue + (ulong)1;
         else
             unSignA = a < 0 ? (ulong)-a : (ulong)a;
 
         if (b == long.MinValue)
-            unSignB = 9223372036854775808UL;
+            unSignB = long.MaxValue + (ulong)1;
         else
             unSignB = b < 0 ? (ulong)-b : (ulong)b;
 
