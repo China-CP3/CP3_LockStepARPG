@@ -64,6 +64,8 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     {
         if(this == Zero) return "0";
 
+        bool isNeg = this.high64 < 0;
+
         // 处理 MinValue 的特殊情况（因为它取反会溢出）
         if (this == MinValue) return "-170141183460469231731687303715884105728";
 
@@ -268,7 +270,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 
         Int128 result = new Int128((long)high, low);
 
-        return isNegative ? -result : result;
+        return isNegative ? Zero - result : result;//new int128()内部可能把high当做有符号数 high的最高位可能是1 所以这里用 0  - result 得到 负result 不然high为负 再取负 负负得正了
     }
 
     //除法的核心思想
