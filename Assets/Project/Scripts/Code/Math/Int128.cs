@@ -70,23 +70,18 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         if (this == MinValue) return "-170141183460469231731687303715884105728";
 
         var sb = new System.Text.StringBuilder();
-        Int128 current = this;
 
+        Int128 current = isNeg ? -this : this;
         Int128 ten = new Int128(10);
 
         // 循环取余法：不断 % 10 拿到最后一位，然后 / 10 去掉最后一位
-        while (current > Zero)
+        while (current != Zero)
         {
-            Int128 remainder = current % ten;        
-            sb.Insert(0, (char)('0' + (int)remainder.low64));// remainder.low64 一定在 0-9 之间，强转 int 安全
-            current = current / ten;
+            UnsignedDivRem(current, ten, out current, out var remainder);
+            sb.Insert(0, (char)('0' + (int)remainder.low64));
         }
 
-        if (this < Zero)
-        {
-            sb.Insert(0, '-');
-        }
-
+        if (isNeg) sb.Insert(0, '-');
         return sb.ToString();
     }
 
@@ -244,7 +239,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     /// <returns></returns>
     public static Int128 Multiply(long a, long b)
     {
-        bool isNegative = (a ^ b) < 0; ;//虽然会得到一个64位的数 但只关心最高位符号位即可 符号位是1 则是负数 说明a和b不同符号
+        bool isNegative = (a ^ b) < 0;//虽然会得到一个64位的数 但只关心最高位符号位即可 符号位是1 则是负数 说明a和b不同符号
 
         ulong unSignA;
         ulong unSignB;
