@@ -133,6 +133,35 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         if (value.high64 == 0 && value.low64 == 0) return 0;
         return 1;
     }
+
+    /// <summary>
+    /// 字符串转int128
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static Int128 Parse(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return Zero;
+
+        Int128 result = Zero;
+        Int128 ten = new Int128(10);
+        bool isNegative = false;
+        int startIndex = 0;
+
+        if (s[0] == '-') { isNegative = true; startIndex = 1; }
+        else if (s[0] == '+') { startIndex = 1; }
+
+        for (int i = startIndex; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c < '0' || c > '9') throw new FormatException($"Int128 Parse Error: {s}");
+            // result = result * 10 + (c - '0')
+            result = (result * ten) + new Int128(c - '0');
+        }
+
+        return isNegative ? -result : result;
+    }
     #endregion
 
     #region 四则运算 +-*/
