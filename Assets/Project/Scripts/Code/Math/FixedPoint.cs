@@ -192,20 +192,20 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
     public static FixedPoint operator *(FixedPoint a, FixedPoint b)
     {
-        decimal temp = (decimal)a.scaledValue * b.scaledValue;//decimal 不支持位运算
-        temp = temp / ScaleFactor;
+        Int128 temp = Int128.Multiply(a.scaledValue, b.scaledValue);
+        temp = temp >> ShiftBits;
 
-        if(temp > long.MaxValue)
+        if (temp > long.MaxValue)
         {
             return MaxValue;
         }
 
-        if(temp < long.MinValue)
+        if (temp < long.MinValue)
         {
             return MinValue;
         }
 
-        return new FixedPoint((long)Math.Round(temp));
+        return new FixedPoint((long)(temp));
     }
 
     //A / B
@@ -230,7 +230,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
             throw new DivideByZeroException("FixedPoint operation a/b b is Zero!!!");
         }
 
-        decimal temp = (decimal)a.scaledValue * ScaleFactor;
+        Int128 temp = new Int128(a.scaledValue) << ShiftBits;
         temp = temp / b.scaledValue;//小数不能位移运算  负数位移运算会向负无穷取整 干脆统一用除法
 
         if (temp > long.MaxValue)
@@ -243,7 +243,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
             return MinValue;
         }
 
-        return new FixedPoint((long)Math.Round(temp));
+        return new FixedPoint((long)temp);
     }
 
     #endregion
@@ -347,11 +347,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
         //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
         //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
-        long targetScaledValue = fixedPoint.scaledValue << ShiftBits;//重点在于这一行的溢出没法处理  需要int128 unity的.net版本过低 不支持
+        Int128 targetScaledValue = new Int128(fixedPoint.scaledValue) << ShiftBits;
 
         //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
         //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
-        int mostBitPos = FindMostSignificantBitPosition(targetScaledValue);
+        int mostBitPos = FindMostSignificantBitPositionForInt128(targetScaledValue);
         //注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
         //+1是为了避免向下取整丢失精度 导致首次猜测值过小 距离真实平方根更遥远 导致后续牛顿迭代法要多循环更多次
         //比如 sqrt(60) 约等于 7.74。
@@ -370,26 +370,28 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
                 break;
             }
 
-            long nextGuessValue = (currentGuess + targetScaledValue / currentGuess) >> 1;
+            Int128 nextGuessValue = ((Int128)currentGuess + targetScaledValue / currentGuess) >> 1;
+            long nextGuessValueLong = (long)nextGuessValue;
+#if UNITY_EDITOR
 
             UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, currentGuess/1024, nextGuessValue / 1024, Math.Sqrt(fixedPoint.scaledValue/1024)));
-            if (nextGuessValue >= currentGuess)//下次猜测会小于当前猜测 猜测值每次循环从大到小越来越逼近结果 如果下次猜测的值大于了当前猜测 说明已经越过了结果
+#endif
+            if (nextGuessValueLong >= currentGuess)//下次猜测会小于当前猜测 猜测值每次循环从大到小越来越逼近结果 如果下次猜测的值大于了当前猜测 说明已经越过了结果
             {
                 return FixedPoint.CreateByScaledValue(currentGuess);
             }
 
-            currentGuess = nextGuessValue;
+            currentGuess = nextGuessValueLong;
         }
 
         return FixedPoint.CreateByScaledValue(currentGuess);//循环12次后 实在不行就返回当前值 基本上不会触发这一行
     }
 
-
     /// <summary>
     /// 二分法查找 某个值的二进制最左边的1具体在哪一位
     /// </summary>
     /// <returns></returns>
-    private static int FindMostSignificantBitPosition(long value)
+    private static int FindMostSignificantBitPositionForLong(long value)
     {
         //思路 用8位举例 0001 0000 先检查高4位(最大位数的一半) !=0 说明值在高4位 丢弃低4位多余的值 返回值+4
         //现在是0001 检查高2位 == 0 说明值不在高2位 
@@ -412,5 +414,18 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
         return postion;
     }
+
+    private static int FindMostSignificantBitPositionForInt128(Int128 value)
+    {
+        if (value == Int128.Zero) return -1;
+
+        long high = value.high64;
+        if (high != 0)
+        {
+            return 64 + FindMostSignificantBitPositionForLong(high);
+        }
+        return FindMostSignificantBitPositionForLong((long)value);
+    }
+
     #endregion
 }
