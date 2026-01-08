@@ -84,15 +84,31 @@ public readonly struct FixedPointVector2
     
     public FixedPoint Magnitude()
     {
-        return FixedPoint.Sqrt(Dot(this, this));
+        return FixedPoint.Sqrt(SqrMagnitude());
     }
 
+    /// <summary>
+    /// 归一化 求方向
+    /// </summary>
     public FixedPointVector2 normalized
     {
+        //让向量的每个分量都除以它自己的长度 得到新向量 新的向量长度变为 1，但方向保持不变
+        //(x/Magnitude, y/Magnitude) = normalized
+
         get
         {
-            FixedPoint magnitude = Magnitude();
-            return magnitude.ScaledValue > 0 ? this / magnitude : Zero;
+            FixedPoint sqrMag = SqrMagnitude();
+
+            // 2. 检查是否为零向量，避免开方和除零错误
+            if (sqrMag.ScaledValue <= 0)
+            {
+                return Zero;
+            }
+
+            FixedPoint magnitude = FixedPoint.Sqrt(sqrMag);
+            //return mag.ScaledValue > 0 ? this / mag : Zero;原始版本 用了2次除法 下面优化了 使用1次除法 两次更快的乘法来完成归一化
+            FixedPoint invMagnitude = FixedPoint.One / magnitude;
+            return new FixedPointVector2(this.x * invMagnitude, this.y * invMagnitude);
         }
     }
     #endregion
