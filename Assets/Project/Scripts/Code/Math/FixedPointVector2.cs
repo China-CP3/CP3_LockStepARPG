@@ -49,7 +49,12 @@ public readonly struct FixedPointVector2
 
     public static FixedPoint Cross(FixedPointVector2 a, FixedPointVector2 b)
     {
-        return a.x * b.y - a.y * b.x;
+        //return a.x * b.y - a.y * b.x;
+        Int128 aXbY = Int128.Multiply(a.x.ScaledValue, b.y.ScaledValue);
+        Int128 aYbX = Int128.Multiply(a.y.ScaledValue, b.x.ScaledValue);
+
+        Int128 result = aXbY - aYbX;
+        return FixedPoint.CreateByScaledValue((long)(result >> FixedPoint.ShiftBits));//先把int128右移再转long
     }
 
     //向量乘以标量 类比 vector2 * int a
@@ -68,10 +73,27 @@ public readonly struct FixedPointVector2
 
     #region 几何属性
 
-    //public FixedPoint sqrMagnitude
-    //{
+    /// <summary>
+    /// 长度的平方 用来高效比较2个向量的长度 避免开发性能巨大消耗
+    /// </summary>
+    /// <returns></returns>
+    public FixedPoint SqrMagnitude()
+    {
+        return Dot(this,this);
+    }
+    
+    public FixedPoint Magnitude()
+    {
+        return FixedPoint.Sqrt(Dot(this, this));
+    }
 
-    //}
-
+    public FixedPointVector2 normalized
+    {
+        get
+        {
+            FixedPoint magnitude = Magnitude();
+            return magnitude.ScaledValue > 0 ? this / magnitude : Zero;
+        }
+    }
     #endregion
 }
