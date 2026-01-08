@@ -33,7 +33,18 @@ public readonly struct FixedPointVector2
     //2个向量相除 没有意义 不需要 包括unity的vector也没有提供
     public static FixedPoint Dot(FixedPointVector2 a, FixedPointVector2 b)
     {
-        return a.x * b.x + a.y * b.y;
+        //return a.x * b.x + a.y * b.y;
+
+        //由于FixedPoint的乘法 会右移10位还原值 导致每次都会丢失小数 如果频繁的丢失 累计起来误差就大了 如果用第二种办法 只在最后结果右移一次 误差小很多
+        //举例 假如放大位数为1位 A:15 * 15 = 225 对应缩小1.5 * 1.5 = 2.25  B:15 * 15  = 225 对应缩小 1.5 * 1.5 = 2.25 最终结果是2.25+2.25 = 4.5 
+        //第一种办法是这样 A的225/10 = 2.2 B的225/10=2.2  2.2+2.2=4.4 丢掉了0.1 每次缩小都丢掉了0.05
+        //第二种办法 先转换成int128再乘 别用定点数的乘法 再求和 最后右移1次 只丢掉1次0.05
+
+        Int128 abX = Int128.Multiply(a.x.ScaledValue , b.x.ScaledValue);
+        Int128 abY = Int128.Multiply(a.y.ScaledValue, b.y.ScaledValue);
+
+        Int128 result = abX + abY;
+        return FixedPoint.CreateByScaledValue((long)(result >> FixedPoint.ShiftBits));//先把int128右移再转long
     }
 
     public static FixedPoint Cross(FixedPointVector2 a, FixedPointVector2 b)

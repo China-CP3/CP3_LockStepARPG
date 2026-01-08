@@ -17,7 +17,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         }
     }
 
-    private const int ShiftBits = 10;//位移数
+    public const int ShiftBits = 10;//位移数
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数 1024
 
     private const long MaxLongParam = long.MaxValue >> ShiftBits;//能传入构造函数的最大值 大概是
@@ -411,7 +411,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
                 value >>= bit;
             }
         }
-
+        
         return postion;
     }
 
