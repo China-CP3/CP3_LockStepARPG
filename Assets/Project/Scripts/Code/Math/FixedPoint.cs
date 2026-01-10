@@ -327,6 +327,19 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     #endregion
 
     #region 数学几何接口
+
+    /// <summary>
+    /// 求绝对值
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static FixedPoint Abs(FixedPoint value)
+    {
+        if (value.scaledValue == long.MinValue) return MaxValue;
+        long result = value.scaledValue < 0 ? -value.scaledValue : value.scaledValue;
+        return new FixedPoint(result);
+    }
+
     /// <summary>
     /// 计算定点数的平方根 牛顿迭代法
     /// </summary>
