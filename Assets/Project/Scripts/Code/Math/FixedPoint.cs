@@ -336,8 +336,19 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     public static FixedPoint Abs(FixedPoint value)
     {
         if (value.scaledValue == long.MinValue) return MaxValue;
-        long result = value.scaledValue < 0 ? -value.scaledValue : value.scaledValue;
+        //long result = value.scaledValue < 0 ? -value.scaledValue : value.scaledValue;//尽量用位运算替换分支判断 性能稍好些
+        long mask = value.scaledValue >> 63;//得到符号位 正数全是0 负数全是1
+        //细节操作 用4位举例 假如是0101 右移3位得到0000
+        //0101 + 0000 = 0101 ^ 0000 = 0101 正数完全没影响 值不改变 
+        //假如是1010 右移得到1111
+        //1010 + 1111 = 1001 ^ 1111 = 0110 = 1010补码
+        long result = (value.scaledValue + mask) ^ mask;
         return new FixedPoint(result);
+        /*
+         * CPU 为了提升效率，采用了指令流水线（Pipeline）技术。当遇到 if 分支时，CPU 会利用分支预测器尝试预判结果并提前执行后面的指令。
+           如果猜对了：流水线满载运行，效率最高。
+           如果猜错了：CPU 必须扔掉已经算了一半的指令，重新回到分支点。会导致几十个时钟周期的浪费。
+         */
     }
 
     /// <summary>
