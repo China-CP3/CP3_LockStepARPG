@@ -232,7 +232,6 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     {
         if (b.scaledValue == 0)//分母不能为0
         {
-            // 在编辑器里报错，这样你写 Bug 时能立刻发现
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             UnityEngine.Debug.LogError("FixedPoint operation a/b b is Zero!!!");
 #endif
@@ -370,7 +369,10 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //负数没有实数平方根
         if (fixedPoint.scaledValue < 0)
         {
-            throw new ArgumentException("FixedPoint Sqrt() param fp < 0 !", nameof(fixedPoint));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            UnityEngine.Debug.LogError("FixedPoint Sqrt() param fp < 0 !");
+#endif
+            return Zero;
         }
 
         if (fixedPoint == Zero)//0的平方根就是0
@@ -430,7 +432,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     /// 二分法查找 某个值的二进制最左边的1具体在哪一位
     /// </summary>
     /// <returns></returns>
-    private static int FindMostSignificantBitPositionForLong(long value)
+    private static int FindMostSignificantBitPositionForULong(ulong value)
     {
         //思路 用8位举例 0001 0000 先检查高4位(最大位数的一半) !=0 说明值在高4位 丢弃低4位多余的值 返回值+4
         //现在是0001 检查高2位 == 0 说明值不在高2位 
@@ -461,9 +463,12 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         long high = value.high64;
         if (high != 0)
         {
-            return 64 + FindMostSignificantBitPositionForLong(high);// 如果高 64 位不为 0，说明最高位在 64-127 之间
+            // 如果 high 是负数，最高位一定是第 63 位 (符号位)
+            if (high < 0) return 64 + 63;
+
+            return 64 + FindMostSignificantBitPositionForULong((ulong)high);// 如果高 64 位不为 0，说明最高位在 64-127 之间
         }
-        return FindMostSignificantBitPositionForLong((long)value.low64);//// 如果高位为 0，则最高位在 0-63 之间
+        return FindMostSignificantBitPositionForULong(value.low64);//// 如果高位为 0，则最高位在 0-63 之间
     }
 
     #endregion
