@@ -134,7 +134,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
     public override int GetHashCode()
     {
-        return scaledValue.GetHashCode();
+        /*
+         * 凡涉及到c#的api 都有可能因为版本不同 环境不同 内部实现不同 我无法确定它会不会破坏帧同步的一致性 
+         * 所以我干脆手写规则 定死了这一个规则
+         */
+        return (int)scaledValue ^ (int)(scaledValue >> 32);
     }
 
     #endregion
