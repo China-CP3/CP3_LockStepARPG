@@ -137,6 +137,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         /*
          * 凡涉及到c#的api 都有可能因为版本不同 环境不同 内部实现不同 我无法确定它会不会破坏帧同步的一致性 
          * 所以我干脆手写规则 定死了这一个规则
+         * 用高32位和低32位做一次逻辑异或
          */
         return (int)scaledValue ^ (int)(scaledValue >> 32);
     }
@@ -231,7 +232,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     {
         if (b.scaledValue == 0)//分母不能为0
         {
-            throw new DivideByZeroException("FixedPoint operation a/b b is Zero!!!");
+            // 在编辑器里报错，这样你写 Bug 时能立刻发现
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            UnityEngine.Debug.LogError("FixedPoint operation a/b b is Zero!!!");
+#endif
+            return Zero;
         }
 
         Int128 temp = new Int128(a.scaledValue) << ShiftBits;
@@ -379,7 +384,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
         //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
         //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
-        int mostBitPos = FindMostSignificantBitPositionForInt128(targetScaledValue);//小心这里得到的值较大 超过long的最大位数64位 todo 后续处理
+        int mostBitPos = FindMostSignificantBitPositionForInt128(targetScaledValue);//小心这里得到的值较大 超过long的最大位数64位
         //注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
         //+1是为了避免向下取整丢失精度 导致首次猜测值过小 距离真实平方根更遥远 导致后续牛顿迭代法要多循环更多次
         //比如 sqrt(60) 约等于 7.74。
@@ -389,7 +394,13 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //有 +1 的计算：
         //(5 >> 1) + 1 = 2 + 1 = 3   初始猜测值 = 1L << 3 = 8
         //+1也保证了初始猜测值总是大于真实的平方根
-        long currentGuess = 1L << ((mostBitPos >> 1) + 1);
+
+        //强制限制它最大为 62，确保 1L << shiftAmount 永远是个正数。
+        int shiftAmount = (mostBitPos >> 1) + 1;
+        if (shiftAmount > 62) shiftAmount = 62;
+        long currentGuess = 1L << shiftAmount;
+        //long currentGuess = 1L << ((mostBitPos >> 1) + 1);
+
         const int MAX_ITERATIONS = 12;
         for (int i = 0; i < MAX_ITERATIONS; i++)
         {
@@ -450,9 +461,9 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         long high = value.high64;
         if (high != 0)
         {
-            return 64 + FindMostSignificantBitPositionForLong(high);
+            return 64 + FindMostSignificantBitPositionForLong(high);// 如果高 64 位不为 0，说明最高位在 64-127 之间
         }
-        return FindMostSignificantBitPositionForLong((long)value);
+        return FindMostSignificantBitPositionForLong((long)value.low64);//// 如果高位为 0，则最高位在 0-63 之间
     }
 
     #endregion
