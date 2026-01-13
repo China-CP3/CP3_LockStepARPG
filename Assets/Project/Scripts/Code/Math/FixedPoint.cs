@@ -4,6 +4,9 @@ using UnityEngine;
 
 public readonly struct FixedPoint:IEquatable<FixedPoint>
 {
+    //为什么用readonly?当结构体作为函数参数，或者调用结构体内部某个函数时，C#有时会复制一份数据，如果不是readonly，编译器不知道内部函数会不会修改数据，
+    //为了保险会先复制一份数据 如果是readonly 编译器就知道了函数内部不会修改数据 跳过复制数据 节约性能
+
     //最大值 9000万亿
     //小数部分占10位，精度为 1/1000 = 0.001 实际可以保证有效精度3位
     //最大平方根 9500万

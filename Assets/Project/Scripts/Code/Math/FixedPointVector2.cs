@@ -1,7 +1,6 @@
-using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
+using System;
 
-public readonly struct FixedPointVector2
+public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
 {
     public readonly FixedPoint x;
     public readonly FixedPoint y;
@@ -17,6 +16,41 @@ public readonly struct FixedPointVector2
     {
         this.x = x; 
         this.y = y;
+    }
+    public bool Equals(FixedPointVector2 other)
+    {
+        return this.x == other.x && this.y == other.y;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is FixedPointVector2 other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked // 允许溢出，不检查
+        {
+            int hash = 17;
+            hash = hash * 31 + x.ScaledValue.GetHashCode();
+            hash = hash * 31 + y.ScaledValue.GetHashCode();
+            return hash;
+        }
+
+        /*
+         * 为什么选 17 和 31？这纯粹是数学经验和前辈们的性能总结：它们都是质数 在乘法运算中能让结果分布得更均匀，减少重复。
+         * 为什么是 31？因为 31 * i 可以被编译器优化为 (i << 5) - i，这是一个位移和减法操作，CPU 运行速度极快。
+         */
+    }
+
+    public static bool operator ==(FixedPointVector2 a, FixedPointVector2 b)
+    {
+        return a.Equals(b);
+    }
+
+    public static bool operator !=(FixedPointVector2 a, FixedPointVector2 b)
+    {
+        return !a.Equals(b);
     }
 
     #region 四则运算 + - * / 点乘叉乘
@@ -125,6 +159,8 @@ public readonly struct FixedPointVector2
     {
         return FixedPoint.Sqrt(SqrMagnitude());
     }
+
+    
 
     /// <summary>
     /// 归一化 求方向
