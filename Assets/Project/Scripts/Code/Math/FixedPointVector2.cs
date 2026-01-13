@@ -1,4 +1,5 @@
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public readonly struct FixedPointVector2
 {
@@ -72,6 +73,44 @@ public readonly struct FixedPointVector2
     #endregion
 
     #region 几何属性
+
+    /// <summary>
+    /// 固定匀速向目标移动
+    /// </summary>
+    /// <param name="curPos"></param>
+    /// <param name="targetPos"></param>
+    /// <param name="speed">每次移动多少距离</param>
+    /// <returns></returns>
+    public static FixedPointVector2 MoveTowards(FixedPointVector2 curPos,FixedPointVector2 targetPos,FixedPoint speed)
+    {
+        FixedPointVector2 dir = targetPos - curPos;
+        FixedPoint distanceSqr = dir.SqrMagnitude();
+
+        // 如果距离已经小于速度，直接到达，防止抖动
+        if (distanceSqr == FixedPoint.Zero || (speed > FixedPoint.Zero && distanceSqr <= speed * speed))
+        {
+            return targetPos;
+        }
+
+        //return curPos + dir.normalized * speed;//优化   normalized会再调用SqrMagenitude 上面已经调用过了 重复调用浪费性能了
+        FixedPoint magnitude = FixedPoint.Sqrt(distanceSqr);
+        return curPos + dir * speed / magnitude;
+    }
+
+    //想要匀速插值还是先快后慢插值 取决于使用方式
+    //匀速插值：起点和终点固定不变 外部调用时 每帧传入匀速放大的T 得到的自然就是匀速推进的向量
+    //先快后慢插值：其实是每一帧 用新的当前位置 推进t进度 t是个百分比 t填1 1帧就到达位置了 但不会完全到达 会无比接近
+    //假如t是0.1 a到b总共100米 那么第一次就走了 10米 新起点是10 剩下距离是90
+    //第二步走9米 新起点是19米 剩下81米 第三步走8.1米 新起点是27.1米 剩下72.9米
+    //第四步走7.29米。。。以此类推
+    //会发现越走越慢 越走越接近终点 无限逼近 理论上无限接近 但代码里可以判断<x米时 视为接近
+    public static FixedPointVector2 Lerp(FixedPointVector2 a, FixedPointVector2 b,FixedPoint t)
+    {
+        if (t <= FixedPoint.Zero) return a;
+        if (t >= FixedPoint.One) return b;
+
+        return a + (b - a) * t;
+    }
 
     /// <summary>
     /// 长度的平方 用来高效比较2个向量的长度 避免开发性能巨大消耗
