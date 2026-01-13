@@ -17,6 +17,7 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
         this.x = x; 
         this.y = y;
     }
+
     public bool Equals(FixedPointVector2 other)
     {
         return this.x == other.x && this.y == other.y;
