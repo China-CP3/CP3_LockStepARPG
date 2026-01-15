@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class FixedPointMath
 {
-    public const int LUT_SIZE = 3600;//定义查找表的大小 (0.1度精度，360度共3600个值)
+    public const int LUT_SIZE = 3600;//定义查找表的大小 (0.1度精度，360度共3600个值 28kb内存) 没必要36000 280kb内存 人类肉眼难以区分是否移动和旋转了0.01度
 
     public const int DEG_0 = 0;    // 正右 (Positive X)
     public const int DEG_90 = 900;  // 正上 (Positive Y)
