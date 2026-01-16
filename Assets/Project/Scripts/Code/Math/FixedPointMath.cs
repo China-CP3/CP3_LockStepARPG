@@ -1,20 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.VersionControl;
-using UnityEngine;
 
 public static class FixedPointMath
 {
     private const int ShiftBits = FixedPoint.ShiftBits;//位移数10
     private const long ScaleFactor = 1L << ShiftBits;//乘法放大的倍数 1024
 
-    public const int LUT_SIZE = 3600;//定义查找表的大小 (0.1度精度，360度共3600个值 28kb内存) 没必要36000 280kb内存 人类肉眼难以区分是否移动和旋转了0.01度
+    private const int LUT_SIZE = 3600;//定义查找表的大小 (0.1度精度，360度共3600个值 28kb内存) 没必要36000 280kb内存 人类肉眼难以区分是否移动和旋转了0.01度
 
-    public const int DEG_0 = 0;    // 正右 (Positive X)
-    public const int DEG_90 = 900;  // 正上 (Positive Y)
-    public const int DEG_180 = 1800; // 正左 (Negative X)
-    public const int DEG_270 = 2700; // 正下 (Negative Y)
-    public const int DEG_360 = 3600; // 回到原点
+    private const int DEG_0 = 0;    // 正右 (Positive X)
+    private const int DEG_90 = 900;  // 正上 (Positive Y)
+    private const int DEG_180 = 1800; // 正左 (Negative X)
+    private const int DEG_270 = 2700; // 正下 (Negative Y)
+    private const int DEG_360 = 3600; // 回到原点
 
     /// <summary>
     /// 将角度缩放到 [0, 3599] 范围内 (0.1度精度)
@@ -32,24 +28,26 @@ public static class FixedPointMath
     /// </summary>
     public static long Sin(int angle)
     {
-        int clampAngle = GetClampDegree(angle);
-        if(clampAngle >= DEG_180)//如果是三四象限 (180.1° ~ 359.9°) 数值为负
+        int clampAngle = GetClampDegree(angle);//限制在360°以内
+        bool isNegative = false;
+
+        //第一象限:直接查表 第二：180 - x   第三 ： x - 180 第四：360 - x
+        if (clampAngle > DEG_180)
         {
-            return -InternalSin(clampAngle - DEG_180);
+            isNegative = true;
+            clampAngle = DEG_360 - clampAngle; // 359度变成1度，181度变成179度 x轴对称
+        }else if (clampAngle == DEG_180)
+        {
+            return 0;
         }
 
-        return InternalSin(clampAngle);
-    }
-
-    private static long InternalSin(int angle)
-    {
-        // 此时 angle 在 0 ~ 1799 之间 (0° ~ 179.9°)
-        // 第二象限 (90.1° ~ 179.9°) 关于 90° 对称
-        if (angle > DEG_90)
+        if (clampAngle > 900)// 第二象限 (90.1° ~ 179.9°)与第一象限 y 对称
         {
-            angle = DEG_180 - angle;
+            clampAngle = DEG_180 - clampAngle;
         }
-        return sinTable90[angle];
+
+        long value = sinTable90[clampAngle];
+        return isNegative ? -value : value;
     }
 
     /// <summary>
