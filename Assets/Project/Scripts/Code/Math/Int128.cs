@@ -45,7 +45,13 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     #endregion
 
     #region 常用接口
-    
+    public static long ClampInt128ToLong(Int128 value)
+    {
+        if (value > long.MaxValue) return long.MaxValue;
+        if (value < long.MinValue) return long.MinValue;
+        return (long)value;
+    }
+
     /// <summary>
     /// 打印16进制
     /// </summary>

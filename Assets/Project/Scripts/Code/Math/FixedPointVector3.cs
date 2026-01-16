@@ -35,16 +35,11 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
         unchecked // 允许溢出，不检查
         {
             int hash = 17;
-            hash = hash * 31 + x.ScaledValue.GetHashCode();
-            hash = hash * 31 + y.ScaledValue.GetHashCode();
-            hash = hash * 31 + z.ScaledValue.GetHashCode();
+            hash = hash * 31 + x.GetHashCode();
+            hash = hash * 31 + y.GetHashCode();
+            hash = hash * 31 + z.GetHashCode();
             return hash;
         }
-
-        /*
-         * 为什么选 17 和 31？这纯粹是数学经验和前辈们的性能总结：它们都是质数 在乘法运算中能让结果分布得更均匀，减少重复。
-         * 为什么是 31？因为 31 * i 可以被编译器优化为 (i << 5) - i，这是一个位移和减法操作，CPU 运行速度极快。
-         */
     }
 
     public static bool operator ==(FixedPointVector3 a, FixedPointVector3 b)
@@ -132,16 +127,19 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
     public static FixedPointVector3 MoveTowards(FixedPointVector3 curPos, FixedPointVector3 targetPos, FixedPoint speed)
     {
         FixedPointVector3 dir = targetPos - curPos;
-        FixedPoint distanceSqr = dir.SqrMagnitude();
+        long distSqrScaled = dir.SqrMagnitude().ScaledValue;
 
         // 如果距离已经小于速度，直接到达，防止抖动
-        if (distanceSqr == FixedPoint.Zero || (speed > FixedPoint.Zero && distanceSqr <= speed * speed))
+        // 使用 Int128 处理 speed 的平方判定
+        Int128 speedScaled = speed.ScaledValue;
+        Int128 speedSqrFull = (speedScaled * speedScaled) >> FixedPoint.ShiftBits;
+        if (distSqrScaled == 0 || (speed > FixedPoint.Zero && distSqrScaled <= speedSqrFull))
         {
             return targetPos;
         }
 
         //return curPos + dir.normalized * speed;//优化   normalized会再调用SqrMagenitude 上面已经调用过了 重复调用浪费性能了
-        FixedPoint magnitude = FixedPoint.Sqrt(distanceSqr);
+        FixedPoint magnitude = FixedPointMath.Sqrt(FixedPoint.CreateByScaledValue(distSqrScaled));
         return curPos + dir * speed / magnitude;
     }
 
@@ -171,7 +169,7 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
 
     public FixedPoint Magnitude()
     {
-        return FixedPoint.Sqrt(SqrMagnitude());
+        return FixedPointMath.Sqrt(SqrMagnitude());
     }
 
     /// <summary>
@@ -192,11 +190,17 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
                 return Zero;
             }
 
-            FixedPoint magnitude = FixedPoint.Sqrt(sqrMag);
-            //return mag.ScaledValue > 0 ? this / mag : Zero;原始版本 用了2次除法 下面优化了 使用1次除法 两次更快的乘法来完成归一化
-            FixedPoint invMagnitude = FixedPoint.One / magnitude;
-            return new FixedPointVector3(this.x * invMagnitude, this.y * invMagnitude, this.z * invMagnitude);
+            FixedPoint magnitude = FixedPointMath.Sqrt(sqrMag);
+            return new FixedPointVector3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
         }
     }
     #endregion
+
+    /// <summary>
+    /// 投影到 XZ 平面 丢弃 Y 轴
+    /// </summary>
+    public FixedPointVector2 ToVector2XZ()
+    {
+        return new FixedPointVector2(this.x, this.z);
+    }
 }

@@ -33,8 +33,8 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
         unchecked // 允许溢出，不检查
         {
             int hash = 17;
-            hash = hash * 31 + x.ScaledValue.GetHashCode();
-            hash = hash * 31 + y.ScaledValue.GetHashCode();
+            hash = hash * 31 + x.GetHashCode();
+            hash = hash * 31 + y.GetHashCode();
             return hash;
         }
 
@@ -108,6 +108,31 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
     #endregion
 
     #region 几何属性
+    /// <summary>
+    /// 将向量旋转指定角度
+    /// </summary>
+    /// <param name="v">原向量</param>
+    /// <param name="angleDegrees">旋转角度 (0-360)</param>
+    public static FixedPointVector2 Rotate(FixedPointVector2 v, int angleDegrees)
+    {
+        FixedPoint sin = FixedPoint.CreateByLong(FixedPointMath.Sin(angleDegrees));
+        FixedPoint cos = FixedPoint.CreateByLong(FixedPointMath.Cos(angleDegrees));
+
+        // 旋转矩阵公式: 
+        // x' = x * cos - y * sin
+        // y' = x * sin + y * cos
+
+        // 使用 Int128 保护中间计算过程
+        long xVal = v.x.ScaledValue;
+        long yVal = v.y.ScaledValue;
+        long sVal = sin.ScaledValue;
+        long cVal = cos.ScaledValue;
+
+        long rx = (long)(((Int128)xVal * cVal - (Int128)yVal * sVal) >> FixedPoint.ShiftBits);
+        long ry = (long)(((Int128)xVal * sVal + (Int128)yVal * cVal) >> FixedPoint.ShiftBits);
+
+        return new FixedPointVector2(FixedPoint.CreateByScaledValue(rx), FixedPoint.CreateByScaledValue(ry));
+    }
 
     /// <summary>
     /// 固定匀速向目标移动
@@ -119,16 +144,19 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
     public static FixedPointVector2 MoveTowards(FixedPointVector2 curPos,FixedPointVector2 targetPos,FixedPoint speed)
     {
         FixedPointVector2 dir = targetPos - curPos;
-        FixedPoint distanceSqr = dir.SqrMagnitude();
+        long distSqrScaled = dir.SqrMagnitude().ScaledValue;
 
         // 如果距离已经小于速度，直接到达，防止抖动
-        if (distanceSqr == FixedPoint.Zero || (speed > FixedPoint.Zero && distanceSqr <= speed * speed))
+        // 使用 Int128 处理 speed 的平方判定
+        Int128 speedScaled = speed.ScaledValue;
+        Int128 speedSqrFull = (speedScaled * speedScaled) >> FixedPoint.ShiftBits;
+        if (distSqrScaled == 0 || (speed > FixedPoint.Zero && distSqrScaled <= speedSqrFull))
         {
             return targetPos;
         }
 
         //return curPos + dir.normalized * speed;//优化   normalized会再调用SqrMagenitude 上面已经调用过了 重复调用浪费性能了
-        FixedPoint magnitude = FixedPoint.Sqrt(distanceSqr);
+        FixedPoint magnitude = FixedPointMath.Sqrt(FixedPoint.CreateByScaledValue(distSqrScaled));
         return curPos + dir * speed / magnitude;
     }
 
@@ -158,10 +186,8 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
     
     public FixedPoint Magnitude()
     {
-        return FixedPoint.Sqrt(SqrMagnitude());
+        return FixedPointMath.Sqrt(SqrMagnitude());
     }
-
-    
 
     /// <summary>
     /// 归一化 求方向
@@ -181,11 +207,17 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
                 return Zero;
             }
 
-            FixedPoint magnitude = FixedPoint.Sqrt(sqrMag);
-            //return mag.ScaledValue > 0 ? this / mag : Zero;原始版本 用了2次除法 下面优化了 使用1次除法 两次更快的乘法来完成归一化
-            FixedPoint invMagnitude = FixedPoint.One / magnitude;
-            return new FixedPointVector2(this.x * invMagnitude, this.y * invMagnitude);
+            FixedPoint magnitude = FixedPointMath.Sqrt(sqrMag);
+            return new FixedPointVector2(this.x / magnitude, this.y / magnitude);
         }
     }
     #endregion
+
+    /// <summary>
+    /// 还原回 3D 向量，并指定高度 Y
+    /// </summary>
+    public FixedPointVector3 ToVector3(FixedPoint y)
+    {
+        return new FixedPointVector3(this.x, y, this.y); // 注意 V2 的 y 变成了 V3 的 z
+    }
 }

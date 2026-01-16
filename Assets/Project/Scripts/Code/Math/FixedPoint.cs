@@ -56,8 +56,8 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         {
             return MinValue;
         }
-
-        return new FixedPoint((long)Math.Round(value * ScaleFactor));
+        double scaleValue = value * ScaleFactor;
+        return new FixedPoint((long)(scaleValue>=0 ? scaleValue + 0.5 : scaleValue - 0.5));
     }
 
     //public FixedPoint(int value)
@@ -203,17 +203,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         Int128 temp = Int128.Multiply(a.scaledValue, b.scaledValue);
         temp = temp >> ShiftBits;
 
-        if (temp > long.MaxValue)
-        {
-            return MaxValue;
-        }
-
-        if (temp < long.MinValue)
-        {
-            return MinValue;
-        }
-
-        return new FixedPoint((long)(temp));
+        return new FixedPoint(Int128.ClampInt128ToLong(temp));//钳制为long的最大最小值
     }
 
     //A / B
@@ -335,144 +325,5 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     {
         return a.scaledValue >= b.scaledValue;
     }
-    #endregion
-
-    #region 数学几何接口
-
-    /// <summary>
-    /// 求绝对值
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static FixedPoint Abs(FixedPoint value)
-    {
-        if (value.scaledValue == long.MinValue) return MaxValue;
-        //long result = value.scaledValue < 0 ? -value.scaledValue : value.scaledValue;//尽量用位运算替换分支判断 性能稍好些
-        long mask = value.scaledValue >> 63;//得到符号位 正数全是0 负数全是1
-        //细节操作 用4位举例 假如是0101 右移3位得到0000
-        //0101 + 0000 = 0101 ^ 0000 = 0101 正数完全没影响 值不改变 
-        //假如是1010 右移得到1111
-        //1010 + 1111 = 1001 ^ 1111 = 0110 = 1010补码
-        long result = (value.scaledValue + mask) ^ mask;
-        return new FixedPoint(result);
-        /*
-         * CPU 为了提升效率，采用了指令流水线（Pipeline）技术。当遇到 if 分支时，CPU 会利用分支预测器尝试预判结果并提前执行后面的指令。
-           如果猜对了：流水线满载运行，效率最高。
-           如果猜错了：CPU 必须扔掉已经算了一半的指令，重新回到分支点。会导致几十个时钟周期的浪费。
-         */
-    }
-
-    /// <summary>
-    /// 计算定点数的平方根 牛顿迭代法
-    /// </summary>
-    /// <param name="targetFp">一个非负的定点数 对它开方</param>
-    /// <returns>该定点数的平方根</returns>
-    public static FixedPoint Sqrt(FixedPoint fixedPoint)
-    {
-        //负数没有实数平方根
-        if (fixedPoint.scaledValue < 0)
-        {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            UnityEngine.Debug.LogError("FixedPoint Sqrt() param fp < 0 !");
-#endif
-            return Zero;
-        }
-
-        if (fixedPoint == Zero)//0的平方根就是0
-        {
-            return Zero;
-        }
-
-        //本质原因是 放大倍数也被开方了 所以这里要再放大1次 才能保证结果正确
-        //比如放大100倍，结果被开方后变成了放大10倍，所以再放大1次 100 * 100 开方后不就刚好是100了吗
-        Int128 targetScaledValue = new Int128(fixedPoint.scaledValue) << ShiftBits;
-
-        //1个数的二进制位数 大约是 它的平方根的二进制位数的2倍 
-        //比如 n = 10000 (二进制 10 0111 0001 0000，长度14位) sqrt(n) = 100(二进制 110 0100，长度7位) 注意只是大约 也有14对比6或者8的情况
-        int mostBitPos = FindMostSignificantBitPositionForInt128(targetScaledValue);//小心这里得到的值较大 超过long的最大位数64位
-        //注意细节 1是long 避免因为int位运算 产生32位的容器 导致后面的long只能在32位容器上计算 丢失数值
-        //+1是为了避免向下取整丢失精度 导致首次猜测值过小 距离真实平方根更遥远 导致后续牛顿迭代法要多循环更多次
-        //比如 sqrt(60) 约等于 7.74。
-        //N = 60。二进制是 111100。最高有效位在第5位，所以 mostBitPos = 5。
-        //没有 +1 的计算：
-        //5 >> 1 = 2 (向下取整，丢失了精度) 初始猜测值 = 1L << 2 = 4  这个猜测值 4 和真实值 7.74 相比，误差很大。
-        //有 +1 的计算：
-        //(5 >> 1) + 1 = 2 + 1 = 3   初始猜测值 = 1L << 3 = 8
-        //+1也保证了初始猜测值总是大于真实的平方根
-
-        //强制限制它最大为 62，确保 1L << shiftAmount 永远是个正数。
-        int shiftAmount = (mostBitPos >> 1) + 1;
-        if (shiftAmount > 62) shiftAmount = 62;
-        long currentGuess = 1L << shiftAmount;
-        //long currentGuess = 1L << ((mostBitPos >> 1) + 1);
-
-        const int MAX_ITERATIONS = 12;
-        for (int i = 0; i < MAX_ITERATIONS; i++)
-        {
-            if (currentGuess == 0)
-            {
-                break;
-            }
-
-            Int128 nextGuessValue = ((Int128)currentGuess + targetScaledValue / currentGuess) >> 1;
-            long nextGuessValueLong = (long)nextGuessValue;
-#if UNITY_EDITOR
-
-            UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, currentGuess/1024, nextGuessValue / 1024, Math.Sqrt(fixedPoint.scaledValue/1024)));
-#endif
-            if (nextGuessValueLong >= currentGuess)//下次猜测会小于当前猜测 猜测值每次循环从大到小越来越逼近结果 如果下次猜测的值大于了当前猜测 说明已经越过了结果
-            {
-                return FixedPoint.CreateByScaledValue(currentGuess);
-            }
-
-            currentGuess = nextGuessValueLong;
-        }
-
-        return FixedPoint.CreateByScaledValue(currentGuess);//循环12次后 实在不行就返回当前值 基本上不会触发这一行
-    }
-
-    /// <summary>
-    /// 二分法查找 某个值的二进制最左边的1具体在哪一位
-    /// </summary>
-    /// <returns></returns>
-    private static int FindMostSignificantBitPositionForULong(ulong value)
-    {
-        //思路 用8位举例 0001 0000 先检查高4位(最大位数的一半) !=0 说明值在高4位 丢弃低4位多余的值 返回值+4
-        //现在是0001 检查高2位 == 0 说明值不在高2位 
-        //现在是0001 检查高1位 == 0 说明值不在高1位 已经可以得出在第0位 返回值+0 最终返回值是4
-
-        if(value <= 0)
-        {
-            return -1;
-        }
-
-        int postion = 0;
-        for (int bit = 32; bit > 0; bit >>= 1)
-        {
-            if (value >> bit != 0)
-            {
-                postion += bit; 
-                value >>= bit;
-            }
-        }
-        
-        return postion;
-    }
-
-    private static int FindMostSignificantBitPositionForInt128(Int128 value)
-    {
-        if (value == Int128.Zero) return -1;
-
-        long high = value.high64;
-        if (high != 0)
-        {
-            // 如果 high 是负数，最高位一定是第 63 位 (符号位)
-            if (high < 0) return 64 + 63;
-
-            return 64 + FindMostSignificantBitPositionForULong((ulong)high);// 如果高 64 位不为 0，说明最高位在 64-127 之间
-        }
-        return FindMostSignificantBitPositionForULong(value.low64);//// 如果高位为 0，则最高位在 0-63 之间
-    }
-
     #endregion
 }
