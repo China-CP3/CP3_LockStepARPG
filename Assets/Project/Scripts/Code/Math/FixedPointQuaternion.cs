@@ -17,5 +17,13 @@ public readonly struct FixedPointQuaternion
         this.w = w;
     }
 
+    // 四元数乘法：用于合并旋转
+    // 逻辑：result = lhs * rhs (表示先进行 rhs 旋转，再进行 lhs 旋转)
+    // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先做 B，再做 A。
+    public static FixedPointQuaternion operator *(FixedPointQuaternion lhs, FixedPointQuaternion rhs)
+    {
+
+        return new FixedPointQuaternion();
+    }
 
 }
