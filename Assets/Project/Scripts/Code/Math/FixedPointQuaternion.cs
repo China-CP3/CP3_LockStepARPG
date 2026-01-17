@@ -20,11 +20,9 @@ public readonly struct FixedPointQuaternion
     // 四元数乘法：用于合并旋转 
     // 逻辑：result = lhs * rhs (表示先进行 rhs 旋转，再进行 lhs 旋转)
     // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先执行B旋转，再执行A旋转。
-    // 最终简化公式 哈密顿积公式：
-    // w表示标量 U表示向量xyz
-    // newW：w1 * w2 - u1 * u2 (点乘)
-    // newU: w1 * u2 + w2 * u1 + u1 * u2 (叉乘)
-
+    // 最终简化公式 哈密顿积公式：w表示标量 U表示向量xyz
+    // newW：w1 * w2 - u1 * u2 (点乘) 得到新的旋转角度
+    // newU: w1 * u2 + w2 * u1 + u1 * u2 (叉乘) 得到新的轴 表示绕这个轴旋转
     public static FixedPointQuaternion operator *(FixedPointQuaternion A, FixedPointQuaternion B)
     {
         long aX = A.x.ScaledValue;
