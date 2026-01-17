@@ -17,13 +17,43 @@ public readonly struct FixedPointQuaternion
         this.w = w;
     }
 
-    // 四元数乘法：用于合并旋转
+    // 四元数乘法：用于合并旋转 
     // 逻辑：result = lhs * rhs (表示先进行 rhs 旋转，再进行 lhs 旋转)
-    // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先做 B，再做 A。
-    public static FixedPointQuaternion operator *(FixedPointQuaternion lhs, FixedPointQuaternion rhs)
-    {
+    // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先执行B旋转，再执行A旋转。
+    // 最终简化公式 哈密顿积公式：
+    // w表示标量 U表示向量xyz
+    // newW：w1 * w2 - u1 * u2 (点乘)
+    // newU: w1 * u2 + w2 * u1 + u1 * u2 (叉乘)
 
-        return new FixedPointQuaternion();
+    public static FixedPointQuaternion operator *(FixedPointQuaternion A, FixedPointQuaternion B)
+    {
+        long aX = A.x.ScaledValue;
+        long aY = A.y.ScaledValue;
+        long aZ = A.z.ScaledValue;
+        long aW = A.w.ScaledValue;
+
+        long bX = B.x.ScaledValue;
+        long bY = B.y.ScaledValue;
+        long bZ = B.z.ScaledValue;
+        long bW = B.w.ScaledValue;
+
+        // 计算公式：w_new = w1w2 - v1·v2,  v_new = w1v2 + w2v1 + v1 x v2
+        //newW = a.w * b.w - (a.x * b.x + a.y * b.y + a.z * b.z);
+        //newX = a.w * b.x + b.w * a.x + a.y * b.z - b.y * a.z
+        //newY = a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z
+        //newZ = a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x
+        Int128 x = Int128.Multiply(aW, bX) + Int128.Multiply(bW, aX) + Int128.Multiply(aY, bZ) - Int128.Multiply(aZ, bY);
+        Int128 y = Int128.Multiply(aW, bY) + Int128.Multiply(bW, aY) + Int128.Multiply(aZ, bX) - Int128.Multiply(aX, bZ);
+        Int128 z = Int128.Multiply(aW, bZ) + Int128.Multiply(bW, aZ) + Int128.Multiply(aX, bY) - Int128.Multiply(aY, bX);
+        Int128 w = Int128.Multiply(aW, bW) - (Int128.Multiply(aX, bX) + Int128.Multiply(aY, bY) + Int128.Multiply(aZ, bZ));
+
+        return new FixedPointQuaternion(
+        FixedPoint.CreateByScaledValue((long)(x >> FixedPoint.ShiftBits)),
+        FixedPoint.CreateByScaledValue((long)(y >> FixedPoint.ShiftBits)),
+        FixedPoint.CreateByScaledValue((long)(z >> FixedPoint.ShiftBits)),
+        FixedPoint.CreateByScaledValue((long)(w >> FixedPoint.ShiftBits))
+        );
+
     }
 
 }
