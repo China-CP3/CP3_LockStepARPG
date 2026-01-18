@@ -40,6 +40,7 @@ public readonly struct FixedPointQuaternion
         //newX = a.w * b.x + b.w * a.x + a.y * b.z - b.y * a.z
         //newY = a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z
         //newZ = a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x
+        //想把先旋转B后旋转A改为先A后B 调换叉乘顺序即可
         Int128 x = Int128.Multiply(aW, bX) + Int128.Multiply(bW, aX) + Int128.Multiply(aY, bZ) - Int128.Multiply(aZ, bY);
         Int128 y = Int128.Multiply(aW, bY) + Int128.Multiply(bW, aY) + Int128.Multiply(aZ, bX) - Int128.Multiply(aX, bZ);
         Int128 z = Int128.Multiply(aW, bZ) + Int128.Multiply(bW, aZ) + Int128.Multiply(aX, bY) - Int128.Multiply(aY, bX);
@@ -54,4 +55,28 @@ public readonly struct FixedPointQuaternion
 
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="angle01">0.1 度为单位的整数</param>
+    /// <param name="axis">绕某条轴旋转</param>
+    /// <returns></returns>
+    public static FixedPointQuaternion AngleAxis(int angle01, FixedPointVector3 axis)
+    {
+        //取半角（这是四元数强制要求的数学结构）
+        int halfAngle = angle01 / 2;//注意!传入的是 0.1 度为单位的整数
+
+        FixedPoint s = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(halfAngle));//xyz分别乘以sin(angle/2) 得到新的xyz 表示绕某条轴旋转
+        FixedPoint c = FixedPoint.CreateByScaledValue(FixedPointMath.Cos(halfAngle));//cos(angle/2) 表示旋转的角度
+
+        //旋转轴必须是单位向量（归一化）
+        FixedPointVector3 normAxis = axis.normalized;
+
+        return new FixedPointQuaternion(
+            normAxis.x * s,
+            normAxis.y * s,
+            normAxis.z * s,
+            c
+        );
+    }
 }
