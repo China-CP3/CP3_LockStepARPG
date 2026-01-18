@@ -17,7 +17,7 @@ public readonly struct FixedPointQuaternion
         this.w = w;
     }
 
-    // 四元数乘法：用于合并旋转 
+    // 2个四元数相乘：用于合并旋转 
     // 逻辑：result = lhs * rhs (表示先进行 rhs 旋转，再进行 lhs 旋转)
     // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先执行B旋转，再执行A旋转。
     // 最终简化公式 哈密顿积公式：w表示标量 U表示向量xyz
@@ -55,6 +55,18 @@ public readonly struct FixedPointQuaternion
 
     }
 
+    //四元数 * 向量
+    public static FixedPointVector3 operator *(FixedPointQuaternion q, FixedPointVector3 v)
+    {
+        FixedPointVector3 qV = new FixedPointVector3(q.x, q.y, q.z);
+
+        // 计算 t = 2 * Cross(qv, v)
+        FixedPointVector3 t = FixedPointVector3.Cross(qV, v) * FixedPoint.CreateByScaledValue(2 << FixedPoint.ShiftBits);
+
+        // 计算 v' = v + q.w * t + Cross(qv, t)
+        return v + (t * q.w) + FixedPointVector3.Cross(qV, t);
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -64,6 +76,10 @@ public readonly struct FixedPointQuaternion
     public static FixedPointQuaternion AngleAxis(int angle01, FixedPointVector3 axis)
     {
         //取半角（这是四元数强制要求的数学结构）
+        //因为四元数是通过 q * v * q的负一次方来旋转向量的
+        //这个运算过程中，向量会被 q 乘一次，再被 q^-1 乘一次，合起来正好两次
+        //所以我们在构造 q 的时候先除以2，最后旋转时‘两次旋转’加起来正好就是我们要的完整角度
+
         int halfAngle = angle01 / 2;//注意!传入的是 0.1 度为单位的整数
 
         FixedPoint s = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(halfAngle));//xyz分别乘以sin(angle/2) 得到新的xyz 表示绕某条轴旋转
@@ -78,5 +94,25 @@ public readonly struct FixedPointQuaternion
             normAxis.z * s,
             c
         );
+    }
+
+    public FixedPointQuaternion Normalized
+    {
+        get
+        {
+            long xS = x.ScaledValue;
+            long yS = y.ScaledValue;
+            long zS = z.ScaledValue;
+            long wS = w.ScaledValue;
+
+            // 计算 x^2 + y^2 + z^2 + w^2
+            Int128 sum = Int128.Multiply(xS, xS) + Int128.Multiply(yS, yS) +
+                         Int128.Multiply(zS, zS) + Int128.Multiply(wS, wS);
+            // 右移还原位宽后求平方根
+            FixedPoint magnitude = FixedPointMath.Sqrt(FixedPoint.CreateByScaledValue((long)(sum >> FixedPoint.ShiftBits)));
+
+            if (magnitude <= FixedPoint.Zero) return Identity;
+            return new FixedPointQuaternion(x / magnitude, y / magnitude, z / magnitude, w / magnitude);
+        }
     }
 }

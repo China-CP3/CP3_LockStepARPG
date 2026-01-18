@@ -12,6 +12,7 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
     public static FixedPointVector3 Down = new FixedPointVector3(FixedPoint.Zero, -FixedPoint.One, FixedPoint.Zero);
     public static FixedPointVector3 Left = new FixedPointVector3(-FixedPoint.One, FixedPoint.Zero, FixedPoint.Zero);
     public static FixedPointVector3 Right = new FixedPointVector3(FixedPoint.One, FixedPoint.Zero, FixedPoint.Zero);
+    public static FixedPointVector3 Forward = new FixedPointVector3(FixedPoint.Zero, FixedPoint.Zero, FixedPoint.One);
 
     public FixedPointVector3(FixedPoint x, FixedPoint y, FixedPoint z)
     {
