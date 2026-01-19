@@ -58,11 +58,17 @@ public readonly struct FixedPointQuaternion
     //四元数 * 向量
     public static FixedPointVector3 operator *(FixedPointQuaternion q, FixedPointVector3 v)
     {
+        //简单来说 第一步先走直线 第二步修正 否则就成了直线移动 而不是绕某轴旋转 具体如何修正呢 用z轴叉乘y得到的向量 表示方向和长度进行修正即可
+
         FixedPointVector3 qV = new FixedPointVector3(q.x, q.y, q.z);
 
-        // 计算 t = 2 * Cross(qv, v)
+        //qV:绕这条轴旋转 v:需要旋转的点   *2是因为创建四元数的时候用了半角 angle/2 所以*2还原回去
+        //qV叉乘v得到新向量t t:同时垂直于qV和v的点 或者说在qV和v相交点垂直的向量 表示v直线移动的方向
         FixedPointVector3 t = FixedPointVector3.Cross(qV, v) * FixedPoint.CreateByInt(2);
 
+        // t * 2 * 标量 表示v直线移动的距离
+        // 直线移动后 还有第二部修正 否则就成了直线移动
+        // 用qV叉乘t 表示方向和长度即可
         // 计算 v' = v + q.w * t + Cross(qv, t)
         return v + (t * q.w) + FixedPointVector3.Cross(qV, t);
     }
