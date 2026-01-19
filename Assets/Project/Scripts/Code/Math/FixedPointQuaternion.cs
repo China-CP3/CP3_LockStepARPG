@@ -61,7 +61,7 @@ public readonly struct FixedPointQuaternion
         FixedPointVector3 qV = new FixedPointVector3(q.x, q.y, q.z);
 
         // º∆À„ t = 2 * Cross(qv, v)
-        FixedPointVector3 t = FixedPointVector3.Cross(qV, v) * FixedPoint.CreateByScaledValue(2 << FixedPoint.ShiftBits);
+        FixedPointVector3 t = FixedPointVector3.Cross(qV, v) * FixedPoint.CreateByInt(2);
 
         // º∆À„ v' = v + q.w * t + Cross(qv, t)
         return v + (t * q.w) + FixedPointVector3.Cross(qV, t);
