@@ -92,8 +92,6 @@ public readonly struct FixedPointQuaternion
 
         FixedPoint s = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(halfAngle));//xyz分别乘以sin(angle/2) 得到新的xyz 表示绕某条轴旋转
         FixedPoint c = FixedPoint.CreateByScaledValue(FixedPointMath.Cos(halfAngle));//cos(angle/2) 表示旋转的角度 标量其实就是cosx的值 -1表示旋转了360度 1表示旋转了0度
-
-        //旋转轴必须是单位向量（归一化）
         FixedPointVector3 normAxis = axis.normalized;
 
         return new FixedPointQuaternion(
@@ -116,11 +114,28 @@ public readonly struct FixedPointQuaternion
             // 计算 x^2 + y^2 + z^2 + w^2
             Int128 sum = Int128.Multiply(xS, xS) + Int128.Multiply(yS, yS) +
                          Int128.Multiply(zS, zS) + Int128.Multiply(wS, wS);
-            // 右移还原位宽后求平方根
-            FixedPoint magnitude = FixedPointMath.Sqrt(FixedPoint.CreateByScaledValue((long)(sum >> FixedPoint.ShiftBits)));
 
+            FixedPoint magnitude = FixedPointMath.Sqrt(FixedPoint.CreateByScaledValue((long)(sum >> FixedPoint.ShiftBits)));
             if (magnitude <= FixedPoint.Zero) return Identity;
             return new FixedPointQuaternion(x / magnitude, y / magnitude, z / magnitude, w / magnitude);
         }
     }
+
+    /// <summary>
+    /// 欧拉角转四元数
+    /// </summary>
+    /// <param name="x01"></param>
+    /// <param name="y01"></param>
+    /// <param name="z01"></param>
+    /// <returns></returns>
+    public static FixedPointQuaternion EulerToQuaternion(int x01, int y01, int z01)
+    {
+        FixedPointQuaternion qX = AngleAxis(x01, FixedPointVector3.Right); // (1, 0, 0)
+        FixedPointQuaternion qY = AngleAxis(y01, FixedPointVector3.Up);    // (0, 1, 0)
+        FixedPointQuaternion qZ = AngleAxis(z01, FixedPointVector3.Forward); // (0, 0, 1)
+
+        return qY * qX * qZ;
+    }
+
+
 }
