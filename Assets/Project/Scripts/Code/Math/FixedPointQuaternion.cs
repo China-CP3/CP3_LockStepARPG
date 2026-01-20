@@ -58,7 +58,7 @@ public readonly struct FixedPointQuaternion
     // 四元数 * 向量：实现向量 v 绕四元数 q 代表的轴旋转
     public static FixedPointVector3 operator *(FixedPointQuaternion q, FixedPointVector3 v)
     {
-        //简单来说 第一步先走直线 第二步修正 否则就成了直线移动 而不是绕某轴旋转 具体如何修正呢 用z轴叉乘y得到的向量 表示方向和长度进行修正即可
+        //简单来说 分2步走 第一步先走直线 第二步修正 否则就成了直线移动 而不是绕某轴旋转 具体如何修正呢 用z轴叉乘y得到的向量 表示方向和长度进行修正即可
 
         //qV:这个四元素选择的方向和旋转量
         FixedPointVector3 qV = new FixedPointVector3(q.x, q.y, q.z);
@@ -91,7 +91,7 @@ public readonly struct FixedPointQuaternion
         int halfAngle = angle01 / 2;//注意!传入的是 0.1 度为单位的整数
 
         FixedPoint s = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(halfAngle));//xyz分别乘以sin(angle/2) 得到新的xyz 表示绕某条轴旋转
-        FixedPoint c = FixedPoint.CreateByScaledValue(FixedPointMath.Cos(halfAngle));//cos(angle/2) 表示旋转的角度
+        FixedPoint c = FixedPoint.CreateByScaledValue(FixedPointMath.Cos(halfAngle));//cos(angle/2) 表示旋转的角度 标量其实就是cosx的值 -1表示旋转了360度 1表示旋转了0度
 
         //旋转轴必须是单位向量（归一化）
         FixedPointVector3 normAxis = axis.normalized;
