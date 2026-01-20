@@ -294,5 +294,55 @@ public static class FixedPointMath
         return value < min ? min : value > max ? max : value;
     }
 
+    /// <summary>
+    /// 反余弦函数：根据 Cos 值反推角度 (0.1度单位)
+    /// 输入范围：FixedPoint [-1, 1]
+    /// 输出范围：[0, 1800] (0.1度单位)
+    /// </summary>
+    public static int Acos01(FixedPoint dot)
+    {
+        // 1. 限制输入范围在 [-1, 1]，防止点积微溢出导致查表失败
+        FixedPoint clampedDot = Clamp(dot, -FixedPoint.One, FixedPoint.One);
 
+        // 2. 转换成sinTable 对应的量级 (放大 1024 倍)
+        // 注意：Cos(x) = Sin(90 - x)
+        // 反查的是正弦表，所以处理的是 Sin 轴。
+        long targetValue = clampedDot.ScaledValue;
+
+        // 3. 处理符号。Cos 在 90-180 度是负的
+        bool isNegative = targetValue < 0;
+        long absValue = isNegative ? -targetValue : targetValue;
+
+        // 4. 在 sinTable90 中进行二分查找 (查找对应 Cos 值的角度)
+        // 因为 Cos(x) = sinTable[900 - x]，直接查这个 absValue 对应的角度索引
+        int low = 0;
+        int high = 900;
+        int angleIndex = 0;
+
+        while (low <= high)
+        {
+            int mid = (low + high) >> 1;
+            if (sinTable90[mid] <= absValue)
+            {
+                angleIndex = mid; // 暂存最接近的索引
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid - 1;
+            }
+        }
+
+        // 5. 根据 Cos 函数特性转换索引为最终 0.1 度角度
+        // 如果是正数 (0~90度)：angle = 900 - angleIndex
+        // 如果是负数 (90~180度)：angle = 900 + angleIndex
+        if (isNegative)
+        {
+            return DEG_90 + angleIndex;
+        }
+        else
+        {
+            return DEG_90 - angleIndex;
+        }
+    }
 }

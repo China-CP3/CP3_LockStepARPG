@@ -130,12 +130,84 @@ public readonly struct FixedPointQuaternion
     /// <returns></returns>
     public static FixedPointQuaternion EulerToQuaternion(int x01, int y01, int z01)
     {
-        FixedPointQuaternion qX = AngleAxis(x01, FixedPointVector3.Right); // (1, 0, 0)
-        FixedPointQuaternion qY = AngleAxis(y01, FixedPointVector3.Up);    // (0, 1, 0)
-        FixedPointQuaternion qZ = AngleAxis(z01, FixedPointVector3.Forward); // (0, 0, 1)
+        FixedPointQuaternion qZ = AngleAxis(z01, FixedPointVector3.Forward);
+        FixedPointQuaternion qX = AngleAxis(x01, FixedPointVector3.Right);
+        FixedPointQuaternion qY = AngleAxis(y01, FixedPointVector3.Up);
 
-        return qY * qX * qZ;
+        return qY * qX * qZ;//约定成俗的规则 四元数a * b 先旋转b再选择a 这里真实顺序是zxy
     }
 
+    public static FixedPointQuaternion Lerp(FixedPointQuaternion a, FixedPointQuaternion b, FixedPoint t)
+    {
+        // 公式：a + (b - a) * t
+        FixedPoint oneMinusT = FixedPoint.One - t;
+        return new FixedPointQuaternion(
+            a.x * oneMinusT + b.x * t,
+            a.y * oneMinusT + b.y * t,
+            a.z * oneMinusT + b.z * t,
+            a.w * oneMinusT + b.w * t
+        );
+    }
 
+    /// <summary>
+    /// 球形插值
+    /// </summary>
+    /// <param name="a">起点</param>
+    /// <param name="b">终点</param>
+    /// <param name="t">进度 0 - 1</param>
+    /// <returns></returns>
+    public static FixedPointQuaternion Slerp(FixedPointQuaternion a, FixedPointQuaternion b, FixedPoint t)
+    {
+        // 计算两个四元数的点积（夹角的余弦值）
+        // dot = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w
+        long dotScaled = (long)(Int128.Multiply(a.x.ScaledValue, b.x.ScaledValue) +
+                                     Int128.Multiply(a.y.ScaledValue, b.y.ScaledValue) +
+                                     Int128.Multiply(a.z.ScaledValue, b.z.ScaledValue) +
+                                     Int128.Multiply(a.w.ScaledValue, b.w.ScaledValue));
+
+        //需要右移一次 因为上面是 a.x^16 * b.x^16 = x^32    x^32 + y^32 = (x+y)^32  右移一次即可 变成(x+y)^16 
+        FixedPoint dot = FixedPoint.CreateByScaledValue(dotScaled >> FixedPoint.ShiftBits);
+
+        // 避免绕远路 比如逆时针旋转10度 别变成了顺时针选择350度
+        // 如果点乘为负，反转终点以确保走最短弧线
+        FixedPointQuaternion end = b;
+        if (dot < FixedPoint.Zero)
+        {
+            dot = -dot;
+            end = new FixedPointQuaternion(-b.x, -b.y, -b.z, -b.w);
+        }
+
+        // 如果夹角极小，直接用 Lerp 以免除以 0
+        if (dot > FixedPoint.CreateByScaledValue(65470)) // 约 0.999
+        {
+            return Lerp(a, end, t).Normalized;
+        }
+
+        // 1. 根据点乘结果（cosθ）反求出角度 theta
+        // 这里需要你的数学库支持 Acos，输入 0.1 度单位的整数
+        int theta01 = FixedPointMath.Acos01(dot);
+
+        // 2. 计算分母 sin(theta)
+        long sinThetaScaled = FixedPointMath.Sin(theta01);
+        if (sinThetaScaled == 0) return a; // 安全兜底
+
+        FixedPoint sinThetaInv = FixedPoint.One / FixedPoint.CreateByScaledValue(sinThetaScaled);
+
+        // 3. 计算 weightA = sin((1-t) * theta) / sin(theta)
+        // t 是 0~1 的定点数，theta 是 0~1800 的整数
+        int angleA = (int)((FixedPoint.One - t).ScaledValue * theta01 >> FixedPoint.ShiftBits);
+        FixedPoint weightA = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(angleA)) * sinThetaInv;
+
+        // 4. 计算 weightB = sin(t * theta) / sin(theta)
+        int angleB = (int)(t.ScaledValue * theta01 >> FixedPoint.ShiftBits);
+        FixedPoint weightB = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(angleB)) * sinThetaInv;
+
+        // 5. 最终混合
+        return new FixedPointQuaternion(
+            a.x * weightA + end.x * weightB,
+            a.y * weightA + end.y * weightB,
+            a.z * weightA + end.z * weightB,
+            a.w * weightA + end.w * weightB
+        ).Normalized;
+    }
 }
