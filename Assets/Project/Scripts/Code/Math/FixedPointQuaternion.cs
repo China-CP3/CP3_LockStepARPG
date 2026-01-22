@@ -201,7 +201,6 @@ public readonly struct FixedPointQuaternion
         int angleB = (int)(t.ScaledValue * theta01 >> FixedPoint.ShiftBits);
         FixedPoint weightB = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(angleB)) * sinThetaInv;
 
-        // 5. ×îÖÕ»ìºÏ
         return new FixedPointQuaternion(
             a.x * weightA + end.x * weightB,
             a.y * weightA + end.y * weightB,
