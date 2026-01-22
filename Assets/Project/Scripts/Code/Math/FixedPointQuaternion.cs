@@ -184,7 +184,6 @@ public readonly struct FixedPointQuaternion
         }
 
         // 1. 根据点乘结果（cosθ）反求出角度 theta
-        // 这里需要你的数学库支持 Acos，输入 0.1 度单位的整数
         int theta01 = FixedPointMath.Acos01(dot);
 
         // 2. 计算分母 sin(theta)
