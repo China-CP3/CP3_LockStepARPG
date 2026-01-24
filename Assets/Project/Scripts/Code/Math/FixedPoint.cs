@@ -34,6 +34,11 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
     public static readonly FixedPoint MinValue = new FixedPoint(long.MinValue);
 
     #region 构造函数和工厂方法
+    
+    public static FixedPoint CreateByFloat(float value)
+    {
+        return CreateByDouble(value);
+    }
 
     /*
      * 假如规定保留1位小数  比如1.25  那么四舍五入就是1.3  放大10倍是12.5  再四舍五入是13  
@@ -41,11 +46,6 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
      * 放大后 需要保留的最后1位小数 变成了整数中的个位 也就是2
      * 所以直接加0.5 完全没问题
      */
-    public static FixedPoint CreateByFloat(float value)
-    {
-        return CreateByDouble(value);
-    }
-
     public static FixedPoint CreateByDouble(double value)
     {
         if (value > MaxDoubleParam)
