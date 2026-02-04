@@ -320,8 +320,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     {
         if(b == Zero)
         {
-            //throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
-            return Zero;
+            return Zero;//todo日志
         }
 
         // C# 内置的 Int128 在这种情况下会抛出 OverflowException。
@@ -339,7 +338,6 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         Int128 aAbs = a.high64 < 0 ? -a : a;
         Int128 bAbs = b.high64 < 0 ? -b : b;
         
-
         UnsignedDivRem(aAbs, bAbs, out Int128 quotient,out Int128 remainder);
 
         return isPlus ? quotient:-quotient;
@@ -348,7 +346,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     //模运算
     public static Int128 operator %(Int128 a, Int128 b)
     {
-        if (b == Zero) throw new DivideByZeroException("Int128 a % b b is 0 !!!");
+        if (b == Zero) return Zero;//todo日志
 
         // 处理特殊溢出情况
         if (a == MinValue && b == MinusOne) return Zero;
@@ -395,7 +393,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         a <<= leadingZeros;// a 左移 leadingZeros 位，直接把最高位的 1 顶到最左边
 
         //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
-        //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
+        //余数 - 除数 = 余数 也就是去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
         for (int i = 0; i < 128 - leadingZeros; i++)
         {
             quotientParam = quotientParam << 1;
