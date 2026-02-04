@@ -208,4 +208,9 @@ public readonly struct FixedPointQuaternion
             a.w * weightA + end.w * weightB
         ).Normalized;
     }
+
+    //public static FixedPointQuaternion LookRotation2D(FixedPointVector3 forward)
+    //{
+
+    //}
 }

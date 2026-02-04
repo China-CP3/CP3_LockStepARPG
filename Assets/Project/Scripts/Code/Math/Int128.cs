@@ -103,8 +103,10 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 
     public override int GetHashCode()
     {
+        return (int)high64 ^ (int)(high64 >> 32) ^ (int)low64 ^ (int)(low64 >> 32);
+
         // 使用异或 (^) 混合高位和低位的哈希值，简单且高效  适合需要多个字段比较的时候 单字段直接调用.GetHash
-        return high64.GetHashCode() ^ low64.GetHashCode();
+        //return high64.GetHashCode() ^ low64.GetHashCode();
 
         //比简单的异或更均匀，防冲突能力更强 但帧同步不能用下面这个接口
         //在 .NET 的实现中，为了防止哈希碰撞攻击（HashDoS），可能会在程序启动时生成一个随机种子(Random Seed)。
@@ -318,7 +320,8 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
     {
         if(b == Zero)
         {
-            throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
+            //throw new System.DivideByZeroException("Int128 a/b b is 0 !!!");
+            return Zero;
         }
 
         // C# 内置的 Int128 在这种情况下会抛出 OverflowException。
@@ -387,10 +390,13 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
 
         quotientParam = Zero;//商
         remainderParam = Zero;//余数
+         
+        int leadingZeros = GetLeadingZeroCount(a);// 计算被除数 a 的有效位数。比如 a 是 100，它的有效位才 7 位。
+        a <<= leadingZeros;// a 左移 leadingZeros 位，直接把最高位的 1 顶到最左边
 
         //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
         //余数 - 除数 =余数 也就是 去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < 128 - leadingZeros; i++)
         {
             quotientParam = quotientParam << 1;
             remainderParam = remainderParam << 1;
@@ -408,6 +414,31 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
                 quotientParam = new Int128(quotientParam.high64, quotientParam.low64 | 1);
             }
         }
+    }
+
+    private static int GetLeadingZeroCount(Int128 val)
+    {
+        if (val.high64 != 0)
+        {
+            // 如果高 64 位不为 0，只需看 high64 的高位 0
+            return GetLongLeadingZeroCount((ulong)val.high64);
+        }
+        // 否则高位已经有 64 个 0，再加上 low64 的高位 0
+        return 64 + GetLongLeadingZeroCount(val.low64);
+    }
+
+    // 快速检测 ulong 的高位 0 数量
+    private static int GetLongLeadingZeroCount(ulong v)
+    {
+        if (v == 0) return 64;
+        int n = 0;
+        if (v <= 0x00000000FFFFFFFF) { n += 32; v <<= 32; }
+        if (v <= 0x0000FFFFFFFFFFFF) { n += 16; v <<= 16; }
+        if (v <= 0x00FFFFFFFFFFFFFF) { n += 8; v <<= 8; }
+        if (v <= 0x0FFFFFFFFFFFFFFF) { n += 4; v <<= 4; }
+        if (v <= 0x3FFFFFFFFFFFFFFF) { n += 2; v <<= 2; }
+        if (v <= 0x7FFFFFFFFFFFFFFF) { n += 1; }
+        return n;
     }
 
     /// <summary>

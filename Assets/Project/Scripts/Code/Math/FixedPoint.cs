@@ -284,10 +284,15 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
         //}
     }
 
-    public static explicit operator float(FixedPoint fixedPoint)
-    {
-        return (float)((double)fixedPoint.scaledValue / ScaleFactor);//这里不用位运算是因为会丢失小数
-    }
+    private static readonly float FloatScaleFactor = 1.0f / ScaleFactor;
+    public static explicit operator float(FixedPoint fp) 
+    { 
+        return fp.scaledValue * FloatScaleFactor; 
+    } 
+    //public static explicit operator float(FixedPoint fixedPoint)
+    //{
+    //    return (float)((double)fixedPoint.scaledValue / ScaleFactor);//这里不用位运算是因为会丢失小数 用double和float来处理
+    //}
 
     public static explicit operator double(FixedPoint fixedPoint)
     {
