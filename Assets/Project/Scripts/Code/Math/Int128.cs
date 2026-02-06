@@ -392,7 +392,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
         int leadingZeros = GetLeadingZeroCount(a);// 计算被除数 a 的有效位数。比如 a 是 100，它的有效位才 7 位。
         a <<= leadingZeros;// a 左移 leadingZeros 位，直接把最高位的 1 顶到最左边
 
-        //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1
+        //每一轮 余数左移1位 加上新加入的值 商左移一位 为本次计算结果腾出空间  如果够除 商+1 余数减去除数 不够除就下一轮
         //余数 - 除数 = 余数 也就是去掉用掉的数 比如十进制 13/4 用掉了12 剩下1  不能整除就开始下一轮循环
         for (int i = 0; i < 128 - leadingZeros; i++)
         {
@@ -409,7 +409,7 @@ public readonly struct Int128 : IEquatable<Int128>, IComparable<Int128>
             if(UnsignedCompareTo(remainderParam, b) >= 0)
             {
                 remainderParam = remainderParam - b;
-                quotientParam = new Int128(quotientParam.high64, quotientParam.low64 | 1);
+                quotientParam = new Int128(quotientParam.high64, quotientParam.low64 | 1);//逻辑或1(0001) 由于商在上面左移了一位 末尾一定是0  这时候|0001 相当于直接+1
             }
         }
     }

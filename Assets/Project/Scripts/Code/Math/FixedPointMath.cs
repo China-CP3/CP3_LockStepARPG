@@ -68,16 +68,25 @@ public static class FixedPointMath
     /// </summary>
     public static long Tan(int angle)
     {
-        long s = Sin(angle);
-        long c = Cos(angle);
-        if (c == 0) return long.MaxValue; // 处理 90/270 度除零
+        long sin = Sin(angle);
+        long cos = Cos(angle);
 
-        Int128 numerator = new Int128(s) << FixedPoint.ShiftBits;
-        Int128 result = numerator / c;
+        // 必须用绝对值判断，否则Cos 是负数。
+        // 此时 c < FixedPoint.One.ScaledValue 永远成立（负数小于正数），这会导致所有的第二、三象限的 Tan 全部被错误地判定为 MaxValue。
+        long abcCos = (cos < 0) ? -cos : cos;
+
+        // 如果 cos 极小（不只是0），则视为无穷大，限制在定点数最大值范围内
+        if (abcCos == 0 || abcCos < FixedPoint.One.ScaledValue)
+        {
+            return (sin > 0) ? FixedPoint.MaxValue.ScaledValue : FixedPoint.MinValue.ScaledValue;
+        }
+
+        Int128 numerator = new Int128(sin) << FixedPoint.ShiftBits;
+        Int128 result = numerator / cos;
         return Int128.ClampInt128ToLong(result);
     }
 
-    // sinTable 0-90 只存了0-90度 91个数值 并且放大1024倍 对应定点数放大倍数
+    // sinTable 0-90 只存了0-90度 901个数值 每0.1度对应1个数值 并且放大1024倍 对应定点数放大倍数
     private static readonly short[] sinTable90 = new short[] {
 0, 2, 4, 5, 7, 9, 11, 13, 14, 16, 18, 20, 21, 23, 25,
 27, 29, 30, 32, 34, 36, 38, 39, 41, 43, 45, 46, 48, 50, 52,

@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using UnityEngine;
 
 public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
 {
@@ -219,5 +221,10 @@ public readonly struct FixedPointVector2:IEquatable<FixedPointVector2>
     public FixedPointVector3 ToVector3(FixedPoint y)
     {
         return new FixedPointVector3(this.x, y, this.y); // 注意 V2 的 y 变成了 V3 的 z
+    }
+
+    public static explicit operator UnityEngine.Vector2(FixedPointVector2 v)
+    {
+        return new UnityEngine.Vector2((float)v.x, (float)v.y);
     }
 }

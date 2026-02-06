@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
 {
@@ -185,13 +186,15 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
         {
             FixedPoint sqrMag = SqrMagnitude();
 
-            // 2. 检查是否为零向量，避免开方和除零错误
+            // 检查是否为零向量，避免开方和除零错误
             if (sqrMag.ScaledValue <= 0)
             {
                 return Zero;
             }
 
             FixedPoint magnitude = FixedPointMath.Sqrt(sqrMag);
+            if (magnitude.ScaledValue == 0) return Zero;//防止极小值开方后变成0导致分母为0崩溃
+
             return new FixedPointVector3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
         }
     }
@@ -203,5 +206,10 @@ public readonly struct FixedPointVector3:IEquatable<FixedPointVector3>
     public FixedPointVector2 ToVector2XZ()
     {
         return new FixedPointVector2(this.x, this.z);
+    }
+
+    public static explicit operator UnityEngine.Vector3(FixedPointVector3 v)
+    {
+        return new UnityEngine.Vector3((float)v.x, (float)v.y, (float)v.z);
     }
 }
