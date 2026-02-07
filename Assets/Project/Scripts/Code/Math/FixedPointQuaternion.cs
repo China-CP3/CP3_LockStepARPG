@@ -1,4 +1,6 @@
 
+using UnityEngine;
+
 public readonly struct FixedPointQuaternion
 {
     public readonly FixedPoint x;
@@ -46,11 +48,14 @@ public readonly struct FixedPointQuaternion
         Int128 z = Int128.Multiply(aW, bZ) + Int128.Multiply(bW, aZ) + Int128.Multiply(aX, bY) - Int128.Multiply(aY, bX);
         Int128 w = Int128.Multiply(aW, bW) - (Int128.Multiply(aX, bX) + Int128.Multiply(aY, bY) + Int128.Multiply(aZ, bZ));
 
+        //+0.5 配合unity的向下取整 就能实现四舍五入  把永远向下取整 变成了四舍五入 偶尔向上取整 偶尔向下取整  长期来看双方抵消  这样损失远远小于用于向下取整 
+        long half = 1L << (FixedPoint.ShiftBits - 1);
+
         return new FixedPointQuaternion(
-        FixedPoint.CreateByScaledValue((long)(x >> FixedPoint.ShiftBits)),
-        FixedPoint.CreateByScaledValue((long)(y >> FixedPoint.ShiftBits)),
-        FixedPoint.CreateByScaledValue((long)(z >> FixedPoint.ShiftBits)),
-        FixedPoint.CreateByScaledValue((long)(w >> FixedPoint.ShiftBits))
+            FixedPoint.CreateByScaledValue((long)((x + half) >> FixedPoint.ShiftBits)),
+            FixedPoint.CreateByScaledValue((long)((y + half) >> FixedPoint.ShiftBits)),
+            FixedPoint.CreateByScaledValue((long)((z + half) >> FixedPoint.ShiftBits)),
+            FixedPoint.CreateByScaledValue((long)((w + half) >> FixedPoint.ShiftBits))
         );
 
     }
@@ -209,8 +214,31 @@ public readonly struct FixedPointQuaternion
         ).Normalized;
     }
 
-    //public static FixedPointQuaternion LookRotation2D(FixedPointVector3 forward)
-    //{
+    public static FixedPointQuaternion LookRotation2D(FixedPointVector3 forward)
+    {
+        if (forward == FixedPointVector3.Zero) return Identity;
 
-    //}
+        // 点乘求夹角的公式 A·B = |A||B|cos(θ) 
+        // 只有在 |A| 和 |B| 都为1时，才能简化为 A·B = cos(θ)。
+        FixedPointVector3 f = forward.normalized;
+
+        int angle = FixedPointMath.Acos01(f.z);
+
+        // 判断在左边还是右边
+        // (0,0,1) x f = (-f.y, f.x, 0) -> 在 XZ 平面上只看 x
+        if (f.x < FixedPoint.Zero)
+        {
+            angle = 3600 - angle; // 360度 - 角度
+        }
+
+        return AngleAxis(angle, FixedPointVector3.Up);
+    }
+
+    public static FixedPoint Dot(FixedPointQuaternion a, FixedPointQuaternion b)
+    {
+        // 四元数点积
+        // 公式为： Dot(q1, q2) = x1*x2 + y1*y2 + z1*z2 + w1*w2
+
+        return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+    }
 }

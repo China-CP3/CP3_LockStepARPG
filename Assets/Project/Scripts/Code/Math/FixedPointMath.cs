@@ -232,7 +232,7 @@ public static class FixedPointMath
             long nextGuessValueLong = (long)nextGuessValue;
 #if UNITY_EDITOR
 
-            UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, currentGuess / 1024, nextGuessValue / 1024, Math.Sqrt(fixedPoint.ScaledValue / 1024)));
+            //UnityEngine.Debug.Log(string.Format("Times:{0},currentGuess:{1},nextGuessValue:{2},Math.Sqrt:{3}", i, currentGuess / 1024, nextGuessValue / 1024, Math.Sqrt(fixedPoint.ScaledValue / 1024)));
 #endif
             if (nextGuessValueLong >= currentGuess)//下次猜测会小于当前猜测 猜测值每次循环从大到小越来越逼近结果 如果下次猜测的值大于了当前猜测 说明已经越过了结果
             {
