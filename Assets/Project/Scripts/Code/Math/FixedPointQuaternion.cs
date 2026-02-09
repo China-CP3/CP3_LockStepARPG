@@ -220,17 +220,51 @@ public readonly struct FixedPointQuaternion
 
         // 点乘求夹角的公式 A·B = |A||B|cos(θ) 这个符号用在向量身上时 不是绝对值符号 是模长 很容易混淆 
         // 只有在 |A| 和 |B| 都为1时，才能简化为 A·B = cos(θ)。
-        FixedPointVector3 f = forward.normalized;
+        FixedPointVector3 direction = forward.normalized;
 
-        int angle = FixedPointMath.Acos01(f.z);
+        // 把归一化后的A和世界坐标Z的正方向求夹角 由于cos的特性 这里只有0到180度 假如结果是45度 无法分清是玩家左前方还是右前方 所以转为360度
+        // 这里dir.z就是cosx!
+        // 点积定义：
+        // A · B = |A| * |B| * cos(θ)
 
-        // 判断在左边还是右边
-        if (f.x < FixedPoint.Zero)
+        // dir 与 X轴的点积：
+        // dir · (1,0,0) = dir.x * 1 + dir.y * 0 + dir.z * 0 = dir.x
+
+        // 因为 |dir| = 1, |(1,0,0)| = 1：
+        // dir · (1,0,0) = 1 * 1 * cos(θx) = cos(θx)
+
+        // 所以：
+        // dir.x = cos(θx)
+
+        // 同理：
+        // dir · (0,1,0) = dir.y = cos(θy)
+        // dir · (0,0,1) = dir.z = cos(θz)
+        int angle = FixedPointMath.Acos01(direction.z);//归一化向量dir.x == cos(dir与世界x正方向夹角) yz同理 所以这里不用单独去求dir与世界z正方向的cosx  直接用dir.z即可
+
+        //判断向量A的X即可 如果x<0 就在Z轴左边 需要360度减去刚刚求得的度数 这就是玩家最终需要转的度数
+        //最终是顺时针转还是逆时针 不是这个函数考虑的
+        if (direction.x < FixedPoint.Zero)
         {
-            angle = 3600 - angle; // 360度 - 角度
+            angle = 3600 - angle;
         }
 
         return AngleAxis(angle, FixedPointVector3.Up);
+
+        // 1. 归一化 dir
+        //    目的：只保留方向
+        // 
+        // 2. 理论上应该：dir 点乘 Z轴 → 得到 cos(θ)
+        //    
+        // 3. 但实际上可以简化：
+        //    dir · Z轴 = dir.x*0 + dir.y*0 + dir.z*1 = dir.z
+        //    因为归一化：dir.z = cos(θ)
+        //    所以直接用 dir.z
+        // 
+        // 4. 求角度：angle = Acos(dir.z)
+        // 
+        // 5. 判断左右：
+        //    dir.x > 0 → 右边（1、4象限）→ 0°~180°
+        //    dir.x < 0 → 左边（2、3象限）→ 镜像到 180°~360°
     }
 
     public static FixedPoint Dot(FixedPointQuaternion a, FixedPointQuaternion b)

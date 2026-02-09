@@ -1,5 +1,6 @@
 
 using System;
+using UnityEngine;
 
 public static class FixedPointMath
 {
@@ -354,4 +355,5 @@ public static class FixedPointMath
             return DEG_90 - angleIndex;
         }
     }
+
 }
