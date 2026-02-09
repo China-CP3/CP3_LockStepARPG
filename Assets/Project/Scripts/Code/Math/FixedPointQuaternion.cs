@@ -214,13 +214,13 @@ public readonly struct FixedPointQuaternion
         ).Normalized;
     }
 
-    public static FixedPointQuaternion LookRotation2D(FixedPointVector3 forward)
+    public static FixedPointQuaternion LookRotation2D(FixedPointVector3 directionParam)
     {
-        if (forward == FixedPointVector3.Zero) return Identity;
+        //本质上是求敌人在以玩家为中心360°中哪一度 然后直接赋值给玩家旋转即可 最终的度数 就是dir和世界z正方向的夹角 先求他俩的cosx 再通过acos反推得到x是多少即可
+        if (directionParam == FixedPointVector3.Zero) return Identity;
 
-        // 点乘求夹角的公式 A·B = |A||B|cos(θ) 这个符号用在向量身上时 不是绝对值符号 是模长 很容易混淆 
-        // 只有在 |A| 和 |B| 都为1时，才能简化为 A·B = cos(θ)。
-        FixedPointVector3 direction = forward.normalized;
+        // 点乘求夹角的公式 A·B = |A||B|cos(θ) 必须归一化A和B 这样A和B的模长就是1 最终A*B=COSX 这个符号用在向量身上时 不是绝对值符号 是模长 很容易混淆 
+        FixedPointVector3 direction = directionParam.normalized;
 
         // 把归一化后的A和世界坐标Z的正方向求夹角 由于cos的特性 这里只有0到180度 假如结果是45度 无法分清是玩家左前方还是右前方 所以转为360度
         // 这里dir.z就是cosx!
