@@ -218,14 +218,13 @@ public readonly struct FixedPointQuaternion
     {
         if (forward == FixedPointVector3.Zero) return Identity;
 
-        // 点乘求夹角的公式 A·B = |A||B|cos(θ) 
+        // 点乘求夹角的公式 A·B = |A||B|cos(θ) 这个符号用在向量身上时 不是绝对值符号 是模长 很容易混淆 
         // 只有在 |A| 和 |B| 都为1时，才能简化为 A·B = cos(θ)。
         FixedPointVector3 f = forward.normalized;
 
         int angle = FixedPointMath.Acos01(f.z);
 
         // 判断在左边还是右边
-        // (0,0,1) x f = (-f.y, f.x, 0) -> 在 XZ 平面上只看 x
         if (f.x < FixedPoint.Zero)
         {
             angle = 3600 - angle; // 360度 - 角度
