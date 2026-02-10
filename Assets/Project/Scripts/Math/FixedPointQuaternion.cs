@@ -19,6 +19,11 @@ public readonly struct FixedPointQuaternion
         this.w = w;
     }
 
+    public override string ToString()
+    {
+        return $"Quaternion({x}, {y}, {z}, {w})";
+    }
+
     // 2个四元数相乘：用于合并旋转 
     // 逻辑：result = lhs * rhs (表示先进行 rhs 旋转，再进行 lhs 旋转)
     // 约定俗成：在 Unity 和大多数物理引擎中，乘法是从右往左生效的。即 A * B 是先执行B旋转，再执行A旋转。
@@ -93,6 +98,9 @@ public readonly struct FixedPointQuaternion
         //这个运算过程中，向量会被 q 乘一次，再被 q^-1 乘一次，合起来正好两次
         //所以我们在构造 q 的时候先除以2，最后旋转时‘两次旋转’加起来正好就是我们要的完整角度
 
+        if (axis.sqrMagnitude <= FixedPoint.Zero)
+            return Identity;
+
         int halfAngle = angle01 / 2;//注意!传入的是 0.1 度为单位的整数
 
         FixedPoint s = FixedPoint.CreateByScaledValue(FixedPointMath.Sin(halfAngle));//xyz分别乘以sin(angle/2) 得到新的xyz 表示绕某条轴旋转
@@ -163,6 +171,9 @@ public readonly struct FixedPointQuaternion
     /// <returns></returns>
     public static FixedPointQuaternion Slerp(FixedPointQuaternion a, FixedPointQuaternion b, FixedPoint t)
     {
+        if (t <= FixedPoint.Zero) return a;
+        if (t >= FixedPoint.One) return b;
+
         // 计算两个四元数的点积（夹角的余弦值）
         // dot = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w
         long dotScaled = (long)(Int128.Multiply(a.x.ScaledValue, b.x.ScaledValue) +
