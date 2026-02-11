@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PhysicsMgr2D
+public partial class PhysicsMgr2D
 {
     private static PhysicsMgr2D instance;
     public static PhysicsMgr2D Instance
@@ -24,18 +24,13 @@ public class PhysicsMgr2D
 
     }
 
-    public bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB,bool canEnterBlock)
+    public void AddCollider2D(Collider2DBase collider2D)
     {
-        return false;
+        collider2DList.Add(collider2D);
     }
 
-    public bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
+    public void RemoveCollider2D(Collider2DBase collider2D)
     {
-        return false;
-    }
-
-    public bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
-    {
-        return false;
+        collider2DList.Remove(collider2D);
     }
 }
