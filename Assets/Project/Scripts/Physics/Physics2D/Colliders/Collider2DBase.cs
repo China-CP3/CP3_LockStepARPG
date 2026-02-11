@@ -21,4 +21,9 @@ public class Collider2DBase
         this.LogicPos = LogicPos;
 
     }
+
+    public void UpdateLogicPos(FixedPointVector2 newPos)
+    {
+        LogicPos = newPos;
+    }
 }
