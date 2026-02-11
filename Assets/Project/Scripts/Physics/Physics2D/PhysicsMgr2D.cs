@@ -23,4 +23,19 @@ public class PhysicsMgr2D
     {
 
     }
+
+    public bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB,bool canEnterBlock)
+    {
+        return false;
+    }
+
+    public bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
+    {
+        return false;
+    }
+
+    public bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
+    {
+        return false;
+    }
 }

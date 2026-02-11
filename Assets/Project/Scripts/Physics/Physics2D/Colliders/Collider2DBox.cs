@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public readonly struct Collider2DBox
+public class Collider2DBox
 {
 
 }
