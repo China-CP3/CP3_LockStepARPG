@@ -13,6 +13,12 @@ public class Collider2DBox : Collider2DBase
         this.Size = Size;
         HalfWidth = Size.x / FixedPoint.CreateByInt(2);
         HalfHeight = Size.y / FixedPoint.CreateByInt(2);
+        this.Collider2DType = Collider2DEnum.Box;
+    }
+
+    public override void UpdateLogicSize(FixedPointVector2 logicSize)
+    {
+        Size = logicSize;
     }
 
 
