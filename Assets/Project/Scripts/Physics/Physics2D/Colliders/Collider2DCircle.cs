@@ -13,6 +13,7 @@ public class Collider2DCircle : Collider2DBase
 
     public override void UpdateLogicRadius(FixedPoint radius)
     {
+        base.UpdateLogicRadius(radius);
         this.radius = radius;
     }
 }

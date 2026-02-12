@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public partial class PhysicsMgr2D
+public static class Collider2DDetectTool
 {
-    public bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool canEnterBlock)
+    //public virtual bool DetectCollider(Collider2DBase targetCollider)
+    //{
+
+    //}
+
+    public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool canEnterBlock)
     {
         if(!boxA.Active || !boxB.Active)
         return false;
@@ -18,12 +23,12 @@ public partial class PhysicsMgr2D
         return xIsOver && yIsOver;
     }
 
-    public bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
     {
         return false;
     }
 
-    public bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
     {
         if (!circleA.Active || !circleB.Active)
             return false;
