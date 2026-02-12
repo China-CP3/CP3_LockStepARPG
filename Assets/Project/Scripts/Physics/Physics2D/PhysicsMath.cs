@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public partial class PhysicsMgr2D
 {
@@ -24,6 +25,15 @@ public partial class PhysicsMgr2D
 
     public bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
     {
+        if (!circleA.Active || !circleB.Active)
+            return false;
+
+        FixedPointVector2 distance = circleB .CenterPos - circleA .CenterPos;
+        FixedPoint radiusSum = circleB.radius + circleA.radius;
+        if (distance.SqrMagnitude() <= radiusSum * radiusSum )
+        {
+            return true;
+        }
         return false;
     }
 }

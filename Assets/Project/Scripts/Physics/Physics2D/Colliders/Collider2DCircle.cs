@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class Collider2DCircle : Collider2DBase
 {
-    public Collider2DCircle(FixedPointVector2 CenterPos, FixedPointVector2 LogicPos) :base(CenterPos, LogicPos)
+    public FixedPoint radius;
+    public Collider2DCircle(FixedPoint radius,FixedPointVector2 CenterPos, FixedPointVector2 LogicPos) :base(CenterPos, LogicPos)
     {
-
+        this.radius = radius;
     }
 }
