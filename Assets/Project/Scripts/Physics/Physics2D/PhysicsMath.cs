@@ -28,7 +28,7 @@ public partial class PhysicsMgr2D
         if (!circleA.Active || !circleB.Active)
             return false;
 
-        FixedPointVector2 distance = circleB .CenterPos - circleA .CenterPos;
+        FixedPointVector2 distance = circleB .LogicPos - circleA .LogicPos;
         FixedPoint radiusSum = circleB.radius + circleA.radius;
         if (distance.SqrMagnitude() <= radiusSum * radiusSum )
         {
