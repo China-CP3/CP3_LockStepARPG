@@ -1,15 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
-
 public static class Collider2DDetectTool
 {
-    //public virtual bool DetectCollider(Collider2DBase targetCollider)
-    //{
 
-    //}
-
+    //Box”ÎBox≈ˆ◊≤ºÏ≤‚
     public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool canEnterBlock)
     {
         if(!boxA.Active || !boxB.Active)
@@ -28,6 +22,7 @@ public static class Collider2DDetectTool
         return false;
     }
 
+    //Circle”ÎBox ≈ˆ◊≤ºÏ≤‚
     public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
     {
         if (!circleA.Active || !circleB.Active)
