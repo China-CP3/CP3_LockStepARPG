@@ -14,8 +14,8 @@ public partial class Collider2DBase
     public GameObject RenderObj { get; private set; }
     public FixedPointVector2 CenterPos { get; protected set; }//又有中心位置 又有逻辑位置 其实是为了做偏移
     public FixedPointVector2 LogicPos { get; protected set; }
-    public FixedPoint X => LogicPos.x;
-    public FixedPoint Y => LogicPos.y;
+    public FixedPoint x => LogicPos.x;
+    public FixedPoint y => LogicPos.y;
     public Collider2DEnum Collider2DType { get; protected set; }
 
     public Collider2DBase(FixedPointVector2 CenterPos, FixedPointVector2 LogicPos)

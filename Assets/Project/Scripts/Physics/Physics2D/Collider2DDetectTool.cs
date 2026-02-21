@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 public static class Collider2DDetectTool
 {
 
@@ -11,15 +13,23 @@ public static class Collider2DDetectTool
 
         //todo 考虑检测layer
 
-        bool xIsOver = boxA.X + boxA.HalfWidth >= boxB.X - boxB.HalfWidth && boxA.X - boxA.HalfWidth <= boxB.X + boxB.HalfWidth;
-        bool yIsOver = boxA.Y + boxA.HalfHeight >= boxB.Y - boxB.HalfHeight && boxA.Y - boxA.HalfHeight <= boxB.Y + boxB.HalfHeight;
+        bool xIsOver = boxA.x + boxA.HalfWidth >= boxB.x - boxB.HalfWidth && boxA.x - boxA.HalfWidth <= boxB.x + boxB.HalfWidth;
+        bool yIsOver = boxA.y + boxA.HalfHeight >= boxB.y - boxB.HalfHeight && boxA.y - boxA.HalfHeight <= boxB.y + boxB.HalfHeight;
 
         return xIsOver && yIsOver;
     }
 
     public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
     {
-        return false;
+        if (!circleA.Active || !boxB.Active)
+            return false;
+
+        FixedPoint clampedX = FixedPointMath.Clamp(circleA.x, boxB.x - boxB.HalfWidth, boxB.x + boxB.HalfWidth);
+        FixedPoint clampedY = FixedPointMath.Clamp(circleA.y, boxB.y - boxB.HalfHeight, boxB.y + boxB.HalfHeight);
+        FixedPointVector2 closestPoint = new FixedPointVector2(clampedX, clampedY);//box上距离圆心最近的点
+        FixedPointVector2 dir = circleA.LogicPos - closestPoint;
+
+        return circleA.radius * circleA.radius >= dir.SqrMagnitude();
     }
 
     //Circle与Box 碰撞检测
@@ -30,10 +40,6 @@ public static class Collider2DDetectTool
 
         FixedPointVector2 distance = circleB .LogicPos - circleA .LogicPos;
         FixedPoint radiusSum = circleB.radius + circleA.radius;
-        if (distance.SqrMagnitude() <= radiusSum * radiusSum )
-        {
-            return true;
-        }
-        return false;
+        return distance.SqrMagnitude() <= radiusSum * radiusSum;
     }
 }
