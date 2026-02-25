@@ -1,7 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.UIElements;
+
 public static class Collider2DDetectTool
 {
 
@@ -30,6 +27,11 @@ public static class Collider2DDetectTool
         FixedPointVector2 dir = circleA.LogicPos - closestPoint;
 
         return circleA.radius * circleA.radius >= dir.SqrMagnitude();
+    }
+
+    public static bool DetectCollider(Collider2DBox boxB, Collider2DCircle circleA)
+    {
+        return DetectCollider(circleA, boxB);
     }
 
     //CircleÓëBox Åö×²¼ì²â
