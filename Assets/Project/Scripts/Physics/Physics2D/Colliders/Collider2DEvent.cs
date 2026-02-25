@@ -1,18 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Collider2DEvent : MonoBehaviour
+public class Collider2DEvent
 {
-    // Start is called before the first frame update
-    void Start()
+    protected bool mIsCollider = false;
+    protected List<Collider2DBase> colliderList = new List<Collider2DBase>();
+    private Action<Collider2DBase> OnEnterAction2D;
+    private Action<Collider2DBase> OnStayAction2D;
+    private Action<Collider2DBase> OnExitAction2D;
+
+    public void OnEnterCollider()
     {
-        
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public void OnStayCollider()
     {
-        
+
+    }
+
+    public void OnExitCollider()
+    {
+
     }
 }
