@@ -2,7 +2,7 @@
 public static class Collider2DDetectTool
 {
 
-    //Box与Box碰撞检测
+    //Box VS Box
     public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool canEnterBlock)
     {
         if(!boxA.Active || !boxB.Active)
@@ -10,13 +10,17 @@ public static class Collider2DDetectTool
 
         //todo 考虑检测layer
 
-        bool xIsOver = boxA.x + boxA.HalfWidth >= boxB.x - boxB.HalfWidth && boxA.x - boxA.HalfWidth <= boxB.x + boxB.HalfWidth;
-        bool yIsOver = boxA.y + boxA.HalfHeight >= boxB.y - boxB.HalfHeight && boxA.y - boxA.HalfHeight <= boxB.y + boxB.HalfHeight;
+        // 只要有一个轴没重叠，就是没撞
+        if (boxA.x + boxA.HalfWidth < boxB.x - boxB.HalfWidth) return false; // A在B左边
+        if (boxA.x - boxA.HalfWidth > boxB.x + boxB.HalfWidth) return false; // A在B右边
+        if (boxA.y + boxA.HalfHeight < boxB.y - boxB.HalfHeight) return false; // A在B下边
+        if (boxA.y - boxA.HalfHeight > boxB.y + boxB.HalfHeight) return false; // A在B上边
 
-        return xIsOver && yIsOver;
+        return true;
     }
 
-    public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB)
+    //Circle VS Box
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB, bool canEnterBlock)
     {
         if (!circleA.Active || !boxB.Active)
             return false;
@@ -29,13 +33,14 @@ public static class Collider2DDetectTool
         return circleA.radius * circleA.radius >= dir.SqrMagnitude();
     }
 
-    public static bool DetectCollider(Collider2DBox boxB, Collider2DCircle circleA)
-    {
-        return DetectCollider(circleA, boxB);
-    }
+    //Box Vs Circle
+    //public static bool DetectCollider(Collider2DBox boxB, Collider2DCircle circleA)
+    //{
+    //    return DetectCollider(circleA, boxB);
+    //}
 
-    //Circle与Box 碰撞检测
-    public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB)
+    //Circle VS Circle
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB, bool canEnterBlock)
     {
         if (!circleA.Active || !circleB.Active)
             return false;

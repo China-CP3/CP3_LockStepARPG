@@ -22,19 +22,4 @@ public class Collider2DBox : Collider2DBase
         HalfHeight = Size.y / FixedPoint.CreateByInt(2);
     }
 
-    public bool DetectCollider(Collider2DBase targetCollider)
-    {
-        bool isCollider = false;
-        switch (targetCollider.Collider2DType)
-        {
-            case Collider2DEnum.Box:
-                isCollider = Collider2DDetectTool.DetectCollider(this, targetCollider as Collider2DBox, false);
-                break;
-            case Collider2DEnum.Circle:
-                isCollider = Collider2DDetectTool.DetectCollider(targetCollider as Collider2DCircle, this);
-                break;
-        }
-        //return base.DetectCollider(targetCollider);
-        return isCollider;
-    }
 }
