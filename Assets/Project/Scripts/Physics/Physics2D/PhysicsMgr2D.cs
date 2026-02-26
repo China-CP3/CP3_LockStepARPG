@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 public partial class PhysicsMgr2D
 {
@@ -60,17 +58,16 @@ public partial class PhysicsMgr2D
                 if(func != null)
                 {
                     bool isColliding = func.Invoke(colliderA, colliderB, false);
-                    if(isColliding)
+                    if (isColliding)
                     {
-
-                    }
-                    else
-                    {
-
+                        //todo 让A和B各自记录 已经撞上了对方
                     }
                 }
             }
         }
+
+        //todo 通知所有碰撞器 更新自己的状态 判断这一帧和上一帧已碰撞的列表 进行对比 
+
     }
 
     public void AddCollider2D(Collider2DBase collider2D)
