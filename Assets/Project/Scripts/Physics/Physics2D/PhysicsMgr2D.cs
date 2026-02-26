@@ -19,7 +19,9 @@ public partial class PhysicsMgr2D
             return instance;
         }
     }
+    private PhysicsMgr2D() { }
 
+    private int maxDetectCount;//碰撞器的数量 Collider2DEnum.Max
     private Func<Collider2DBase, Collider2DBase, bool, bool>[,] detectFunc;
 
     //场景中所有碰撞器
@@ -27,7 +29,7 @@ public partial class PhysicsMgr2D
 
     private void Init()
     {
-        int maxDetectCount = (int)Collider2DEnum.Max;
+        maxDetectCount = (int)Collider2DEnum.Max;
         detectFunc = new Func<Collider2DBase, Collider2DBase, bool, bool>[maxDetectCount, maxDetectCount];
 
         Register(Collider2DEnum.Box, Collider2DEnum.Box, (a, b, c) => { return Collider2DDetectTool.DetectCollider((Collider2DBox)a, (Collider2DBox)b, c); });
@@ -48,7 +50,27 @@ public partial class PhysicsMgr2D
 
     public void LogicUpdate()
     {
+        for (int i = 0; i < collider2DList.Count - 1; i++)
+        {
+            Collider2DBase colliderA = collider2DList[i];
+            for (int j = i+1; j < collider2DList.Count; j++)
+            {
+                Collider2DBase colliderB = collider2DList[j];
+                Func<Collider2DBase, Collider2DBase, bool, bool> func = detectFunc[(int)colliderA.Collider2DType, (int)colliderB.Collider2DType];
+                if(func != null)
+                {
+                    bool isColliding = func.Invoke(colliderA, colliderB, false);
+                    if(isColliding)
+                    {
 
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+        }
     }
 
     public void AddCollider2D(Collider2DBase collider2D)
