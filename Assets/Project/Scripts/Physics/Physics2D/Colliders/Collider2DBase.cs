@@ -43,6 +43,6 @@ public partial class Collider2DBase
     public virtual void OnRelease()
     {
         this.Active = false;
-        PhysicsMgr2D.Instance.RemoveCollider2D(this);
+        PhysicsMgr2D.Instance.AddToRemoveList(this);
     }
 }

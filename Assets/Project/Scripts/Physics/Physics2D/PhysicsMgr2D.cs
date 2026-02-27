@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class PhysicsMgr2D
 {
@@ -24,6 +25,8 @@ public partial class PhysicsMgr2D
 
     //场景中所有碰撞器
     private List<Collider2DBase> collider2DList = new List<Collider2DBase>();
+    //待删除列表
+    private List<Collider2DBase> toRemoveList = new List<Collider2DBase>();
 
     private void Init()
     {
@@ -51,9 +54,13 @@ public partial class PhysicsMgr2D
         for (int i = 0; i < collider2DList.Count - 1; i++)
         {
             Collider2DBase colliderA = collider2DList[i];
+            if (!CheckCooliderCondition(colliderA)) continue;
+
             for (int j = i+1; j < collider2DList.Count; j++)
             {
                 Collider2DBase colliderB = collider2DList[j];
+                if (!CheckCooliderCondition(colliderB) || !CheckCooliderCondition(colliderA,colliderB)) continue;
+
                 Func<Collider2DBase, Collider2DBase, bool, bool> func = detectFunc[(int)colliderA.Collider2DType, (int)colliderB.Collider2DType];
                 if(func != null)
                 {
@@ -72,8 +79,11 @@ public partial class PhysicsMgr2D
         for (int i = 0; i < collider2DList.Count; i++)
         {
             Collider2DBase colliderA = collider2DList[i];
+            if (!CheckCooliderCondition(colliderA)) continue;
             colliderA.UpdateCollisionState();
         }
+
+        ClearRemoveList();
     }
 
     public void AddCollider2D(Collider2DBase collider2D)
@@ -81,8 +91,35 @@ public partial class PhysicsMgr2D
         collider2DList.Add(collider2D);
     }
 
-    public void RemoveCollider2D(Collider2DBase collider2D)
+    public void AddToRemoveList(Collider2DBase collider2D)
     {
-        collider2DList.Remove(collider2D);
+        if(collider2DList.Contains(collider2D) && !toRemoveList.Contains(collider2D))
+        {
+            toRemoveList.Add(collider2D);   
+        }
+    }
+
+    private void ClearRemoveList()
+    {
+        for (int i = 0; i < toRemoveList.Count; i++)
+        {
+            collider2DList.Remove(toRemoveList[i]);
+        }
+
+        toRemoveList.Clear();
+    }
+
+    private bool CheckCooliderCondition(Collider2DBase aCollider, Collider2DBase bCollider)
+    {
+        return aCollider.Active && bCollider.Active;
+
+        //todo 未来考虑加入layer或者其他条件 暂时先这样
+    }
+
+    private bool CheckCooliderCondition(Collider2DBase collider)
+    {
+        return collider.Active;
+
+        //todo 未来考虑加入layer或者其他条件 暂时先这样
     }
 }
