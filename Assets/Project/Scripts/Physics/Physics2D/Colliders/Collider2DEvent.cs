@@ -9,9 +9,9 @@ public partial class Collider2DBase
     protected HashSet<Collider2DBase> CurrentFrameSet = new HashSet<Collider2DBase>();//当前帧已碰撞列表
     protected HashSet<Collider2DBase> PreviousFrameSet = new HashSet<Collider2DBase>();//上一帧已碰撞列表
 
-    private Action<Collider2DBase> OnEnterAction2D;
-    private Action<Collider2DBase> OnStayAction2D;
-    private Action<Collider2DBase> OnExitAction2D;
+    public event Action<Collider2DBase> OnEnterAction2D;
+    public event Action<Collider2DBase> OnStayAction2D;
+    public event Action<Collider2DBase> OnExitAction2D;
 
     public void AddCollisionToCurrentFrameList(Collider2DBase target)
     {
@@ -26,6 +26,7 @@ public partial class Collider2DBase
             {
                 //属于是enter
                 OnEnterAction2D?.Invoke(curCollider);
+                OnEnterCollider(curCollider);
             }
         }
 
@@ -35,11 +36,13 @@ public partial class Collider2DBase
             {
                 //属于是stay
                 OnStayAction2D?.Invoke(preCollider);
+                OnStayCollider(preCollider);
             }
             else
             {
                 //属于是exit
                 OnExitAction2D?.Invoke(preCollider);
+                OnExitCollider(preCollider);
             }
         }
 
@@ -49,18 +52,20 @@ public partial class Collider2DBase
         CurrentFrameSet.Clear();
     }
 
-    public void OnEnterCollider()
+    public virtual void OnEnterCollider(Collider2DBase target)
     {
 
     }
 
-    public void OnStayCollider()
+    public virtual void OnStayCollider(Collider2DBase target)
     {
 
     }
 
-    public void OnExitCollider()
+    public virtual void OnExitCollider(Collider2DBase target)
     {
 
     }
+
+
 }
