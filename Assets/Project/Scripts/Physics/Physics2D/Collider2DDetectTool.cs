@@ -94,9 +94,12 @@ public static class Collider2DDetectTool
         else
         {   
             distance = FixedPointMath.Sqrt(distanceSqr);//不得不开方了
-            pushDir = distanceLogicPos.normalized;
+            pushDir = distanceLogicPos / distance;//已经开方了 就别再用Normalize 避免内部再次开方 直接除以距离 一样的
         }
 
-        FixedPoint overlap = radiusSum - distance;
+        FixedPoint overlap = radiusSum - distance;//陷入深度 半径之和 减去 圆心之间的距离
+        circleA.AdjustPos = circleA.LogicPos - (pushDir * overlap) ;
+
+        return result;
     }
 }
