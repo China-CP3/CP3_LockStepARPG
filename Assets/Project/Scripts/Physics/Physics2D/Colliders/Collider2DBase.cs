@@ -17,6 +17,19 @@ public partial class Collider2DBase
     public FixedPoint x => LogicPos.x;
     public FixedPoint y => LogicPos.y;
     public Collider2DEnum Collider2DType { get; protected set; }
+    public bool CanAdjust { get; private set; }//是否允许修正位置 每次被设置mAdjustPos后都允许
+    private FixedPointVector2 mAdjustPos;
+    public FixedPointVector2 AdjustPos //碰撞重叠时 往回拉的向量
+    {
+        get
+        {
+            CanAdjust = false; return mAdjustPos;
+        }
+        set
+        {
+            CanAdjust = true; mAdjustPos = value;
+        }
+    }
 
     public Collider2DBase(FixedPointVector2 CenterPos, FixedPointVector2 LogicPos)
     {

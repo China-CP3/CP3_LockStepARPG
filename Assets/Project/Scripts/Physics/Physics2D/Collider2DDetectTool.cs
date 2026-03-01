@@ -31,14 +31,14 @@ public static class Collider2DDetectTool
             // 如果 distance.x > 0 (B在A右边)，A往左推(-overlapX)
             // 如果 distance.x < 0 (B在A左边)，A往右推(+overlapX)
             FixedPoint moveX = distance.x > FixedPoint.Zero ? -overlapX : overlapX;
-            boxA.UpdateLogicPos(new FixedPointVector2(boxA.x + moveX, boxA.y));
+            boxA.AdjustPos = new FixedPointVector2(boxA.x + moveX, boxA.y);
         }
         else
         {
             // 如果 distance.y > 0 (B在A上边)，A往下推(-overlapY)
             // 如果 distance.y < 0 (B在A下边)，A往上推(+overlapY)
             FixedPoint moveY = distance.y > FixedPoint.Zero ? -overlapY : overlapY;
-            boxA.UpdateLogicPos(new FixedPointVector2(boxA.x, boxA.y + moveY));
+            boxA.AdjustPos = new FixedPointVector2(boxA.x, boxA.y + moveY);
         }
 
         return true;
@@ -70,8 +70,33 @@ public static class Collider2DDetectTool
         if (!circleA.Active || !circleB.Active)
             return false;
 
-        FixedPointVector2 distance = circleB .LogicPos - circleA .LogicPos;
+        FixedPointVector2 distanceLogicPos = circleB .LogicPos - circleA .LogicPos;
         FixedPoint radiusSum = circleB.radius + circleA.radius;
-        return distance.SqrMagnitude() <= radiusSum * radiusSum;
+        FixedPoint radiusSqr = radiusSum * radiusSum;
+        FixedPoint distanceSqr = distanceLogicPos.SqrMagnitude();
+
+        bool result = distanceSqr <= radiusSqr;
+        if (!isAdjustPos)
+            return result;
+
+        if(!result)
+            return false;
+
+        FixedPoint distance;
+        FixedPointVector2 pushDir;
+        // 特殊情况处理：圆心完全重合 (distanceSqr == 0) 如果不处理，下面除以 distance 会报错 (DivideByZero)
+        if (distanceSqr <= FixedPoint.Zero)
+        {
+            // 两个圆心重合了，随便给个方向推开 (比如向右)
+            distance = FixedPoint.Zero;
+            pushDir = new FixedPointVector2(FixedPoint.One, FixedPoint.Zero);
+        }
+        else
+        {   
+            distance = FixedPointMath.Sqrt(distanceSqr);//不得不开方了
+            pushDir = distanceLogicPos.normalized;
+        }
+
+        FixedPoint overlap = radiusSum - distance;
     }
 }
