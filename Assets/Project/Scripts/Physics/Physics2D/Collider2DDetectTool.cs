@@ -3,6 +3,7 @@ public static class Collider2DDetectTool
 {
     //当碰撞器重叠时 总是第一个参数被拉回 谁移动谁被拉回
 
+    #region AABB
     //Box VS Box
     public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool needAdjustPos)
     {
@@ -111,7 +112,7 @@ public static class Collider2DDetectTool
         {
             pushDir = distanceV2 / moveDistance;//回拉的方向
         }
-        
+
         FixedPoint overlap = circleA.radius - moveDistance;//陷入的距离 或者说重叠后需要回拉的距离
         boxB.AdjustPos = boxB.LogicPos - pushDir * overlap;
 
@@ -156,4 +157,7 @@ public static class Collider2DDetectTool
 
         return result;
     }
+    #endregion
+
+
 }

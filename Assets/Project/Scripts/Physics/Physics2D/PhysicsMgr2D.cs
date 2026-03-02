@@ -51,20 +51,21 @@ public partial class PhysicsMgr2D
 
     public void LogicUpdate()
     {
+        #region 只处理碰撞事件系统 比如A进入了B的范围 或者退出了 不处理位移拉回 重叠后拉回 是各个对象自己移动时处理
         for (int i = 0; i < collider2DList.Count - 1; i++)
         {
             Collider2DBase colliderA = collider2DList[i];
             if (!CheckCooliderCondition(colliderA)) continue;
 
-            for (int j = i+1; j < collider2DList.Count; j++)
+            for (int j = i + 1; j < collider2DList.Count; j++)
             {
                 Collider2DBase colliderB = collider2DList[j];
-                if (!CheckCooliderCondition(colliderB) || !CheckCooliderCondition(colliderA,colliderB)) continue;
+                if (!CheckCooliderCondition(colliderB) || !CheckCooliderCondition(colliderA, colliderB)) continue;
 
                 Func<Collider2DBase, Collider2DBase, bool, bool> func = detectFunc[(int)colliderA.Collider2DType, (int)colliderB.Collider2DType];
-                if(func != null)
+                if (func != null)
                 {
-                    bool isColliding = func.Invoke(colliderA, colliderB, colliderA.adjustPosActive);
+                    bool isColliding = func.Invoke(colliderA, colliderB, false);//涉及重叠拉回 只判断是否碰撞了 然后处理进入和退出等碰撞事件
                     if (isColliding)
                     {
                         //让A和B各自记录 已经撞上了对方
@@ -84,6 +85,9 @@ public partial class PhysicsMgr2D
         }
 
         ClearRemoveList();
+        #endregion
+
+
     }
 
     public void AddCollider2D(Collider2DBase collider2D)

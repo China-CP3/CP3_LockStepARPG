@@ -1,0 +1,16 @@
+{
+    "name": "Physics2DAssemely",
+    "rootNamespace": "",
+    "references": [
+        "GUID:adc0c803a2836124791148e3c369947d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
