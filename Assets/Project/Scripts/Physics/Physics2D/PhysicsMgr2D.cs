@@ -64,7 +64,7 @@ public partial class PhysicsMgr2D
                 Func<Collider2DBase, Collider2DBase, bool, bool> func = detectFunc[(int)colliderA.Collider2DType, (int)colliderB.Collider2DType];
                 if(func != null)
                 {
-                    bool isColliding = func.Invoke(colliderA, colliderB, false);
+                    bool isColliding = func.Invoke(colliderA, colliderB, colliderA.adjustPosActive);
                     if (isColliding)
                     {
                         //让A和B各自记录 已经撞上了对方
@@ -101,6 +101,8 @@ public partial class PhysicsMgr2D
 
     private void ClearRemoveList()
     {
+        if (toRemoveList.Count == 0) return;
+
         for (int i = 0; i < toRemoveList.Count; i++)
         {
             collider2DList.Remove(toRemoveList[i]);

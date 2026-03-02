@@ -3,10 +3,10 @@ public static class Collider2DDetectTool
 {
 
     //Box VS Box
-    public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool isAdjustPos)
+    public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool needAdjustPos)
     {
-        if(!boxA.Active || !boxB.Active)
-        return false;
+        if (!boxA.Active || !boxB.Active)
+            return false;
 
         //todo 考虑检测layer
 
@@ -16,7 +16,7 @@ public static class Collider2DDetectTool
         if (boxA.y + boxA.HalfHeight < boxB.y - boxB.HalfHeight) return false; // A在B下边
         if (boxA.y - boxA.HalfHeight > boxB.y + boxB.HalfHeight) return false; // A在B上边
 
-        if (!isAdjustPos) return true;
+        if (!needAdjustPos) return true;
 
         FixedPointVector2 distance = boxB.LogicPos - boxA.LogicPos;
         FixedPoint absdisX = distance.x > FixedPoint.Zero ? distance.x : -distance.x;
@@ -45,17 +45,29 @@ public static class Collider2DDetectTool
     }
 
     //Circle VS Box
-    public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB, bool isAdjustPos)
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DBox boxB, bool needAdjustPos)
     {
         if (!circleA.Active || !boxB.Active)
             return false;
 
         FixedPoint clampedX = FixedPointMath.Clamp(circleA.x, boxB.x - boxB.HalfWidth, boxB.x + boxB.HalfWidth);
         FixedPoint clampedY = FixedPointMath.Clamp(circleA.y, boxB.y - boxB.HalfHeight, boxB.y + boxB.HalfHeight);
-        FixedPointVector2 closestPoint = new FixedPointVector2(clampedX, clampedY);//box上距离圆心最近的点
-        FixedPointVector2 dir = circleA.LogicPos - closestPoint;
+        FixedPointVector2 closestPointV2 = new FixedPointVector2(clampedX, clampedY);//box上距离圆心最近的点
+        FixedPointVector2 distanceV2 = circleA.LogicPos - closestPointV2;
 
-        return circleA.radius * circleA.radius >= dir.SqrMagnitude();
+        bool result = circleA.radius * circleA.radius >= distanceV2.SqrMagnitude();
+        if (!needAdjustPos)
+            return result;
+
+        if (!result)
+            return false;
+
+        FixedPoint moveDistance = distanceV2.Magnitude();
+        FixedPointVector2 pushDir = distanceV2 / moveDistance;//回拉的方向
+
+        boxB.AdjustPos = boxB.LogicPos + pushDir * moveDistance;
+
+        return true;
     }
 
     //Box Vs Circle
@@ -65,21 +77,21 @@ public static class Collider2DDetectTool
     //}
 
     //Circle VS Circle
-    public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB, bool isAdjustPos)
+    public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB, bool needAdjustPos)
     {
         if (!circleA.Active || !circleB.Active)
             return false;
 
-        FixedPointVector2 distanceLogicPos = circleB .LogicPos - circleA .LogicPos;
+        FixedPointVector2 distanceLogicPos = circleB.LogicPos - circleA.LogicPos;
         FixedPoint radiusSum = circleB.radius + circleA.radius;
         FixedPoint radiusSqr = radiusSum * radiusSum;
         FixedPoint distanceSqr = distanceLogicPos.SqrMagnitude();
 
         bool result = distanceSqr <= radiusSqr;
-        if (!isAdjustPos)
+        if (!needAdjustPos)
             return result;
 
-        if(!result)
+        if (!result)
             return false;
 
         FixedPoint distance;
@@ -92,13 +104,13 @@ public static class Collider2DDetectTool
             pushDir = new FixedPointVector2(FixedPoint.One, FixedPoint.Zero);
         }
         else
-        {   
+        {
             distance = FixedPointMath.Sqrt(distanceSqr);//不得不开方了
             pushDir = distanceLogicPos / distance;//已经开方了 就别再用Normalize 避免内部再次开方 直接除以距离 一样的
         }
 
         FixedPoint overlap = radiusSum - distance;//陷入深度 半径之和 减去 圆心之间的距离
-        circleA.AdjustPos = circleA.LogicPos - (pushDir * overlap) ;
+        circleA.AdjustPos = circleA.LogicPos - (pushDir * overlap);
 
         return result;
     }

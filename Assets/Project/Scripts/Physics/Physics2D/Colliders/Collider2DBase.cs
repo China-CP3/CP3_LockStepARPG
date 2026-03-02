@@ -17,17 +17,19 @@ public partial class Collider2DBase
     public FixedPoint x => LogicPos.x;
     public FixedPoint y => LogicPos.y;
     public Collider2DEnum Collider2DType { get; protected set; }
-    public bool CanAdjust { get; private set; }//是否允许修正位置 每次被设置mAdjustPos后都允许
+
+    public bool adjustPosActive { get; private set; }// 是否使用或开启位置修正(碰撞阻挡)
+    public bool CanSetAdjust { get; private set; }//是否允许修正位置 每次被设置mAdjustPos后都允许
     private FixedPointVector2 mAdjustPos;
     public FixedPointVector2 AdjustPos //碰撞重叠时 往回拉的向量
     {
         get
         {
-            CanAdjust = false; return mAdjustPos;
+            CanSetAdjust = false; return mAdjustPos;
         }
         set
         {
-            CanAdjust = true; mAdjustPos = value;
+            CanSetAdjust = true; mAdjustPos = value;
         }
     }
 
@@ -42,6 +44,11 @@ public partial class Collider2DBase
     public void SetRenderObj(GameObject renderObj)
     {
         this.RenderObj = renderObj;
+    }
+
+    public void SetadjustPosActive(bool active)
+    {
+        this.adjustPosActive = active;
     }
 
     public virtual void UpdateLogicPos(FixedPointVector2 newLogicPos)
