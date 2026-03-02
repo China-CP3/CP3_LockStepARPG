@@ -18,7 +18,7 @@ public partial class Collider2DBase
     public FixedPoint y => LogicPos.y;
     public Collider2DEnum Collider2DType { get; protected set; }
 
-    public bool adjustPosActive { get; private set; }// 是否使用或开启位置修正(碰撞阻挡)
+    public bool adjustPosActive { get; private set; }// 开启碰撞重叠后拉回 像莫甘娜W这种 就不用拉回
     public bool CanSetAdjust { get; private set; }//是否允许修正位置 每次被设置mAdjustPos后都允许
     private FixedPointVector2 mAdjustPos;
     public FixedPointVector2 AdjustPos //碰撞重叠时 往回拉的向量

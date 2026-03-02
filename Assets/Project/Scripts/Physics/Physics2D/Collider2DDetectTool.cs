@@ -1,6 +1,7 @@
 
 public static class Collider2DDetectTool
 {
+    //当碰撞器重叠时 总是第一个参数被拉回 谁移动谁被拉回
 
     //Box VS Box
     public static bool DetectCollider(Collider2DBox boxA, Collider2DBox boxB, bool needAdjustPos)
@@ -25,7 +26,7 @@ public static class Collider2DDetectTool
         FixedPoint overlapX = (boxA.HalfWidth + boxB.HalfWidth) - absdisX;
         FixedPoint overlapY = (boxA.HalfHeight + boxB.HalfHeight) - absdisY;
 
-        //谁陷进去得浅，就往谁那边推
+        //哪边陷进去得浅，就往哪边推
         if (overlapX < overlapY)
         {
             // 如果 distance.x > 0 (B在A右边)，A往左推(-overlapX)
@@ -63,18 +64,59 @@ public static class Collider2DDetectTool
             return false;
 
         FixedPoint moveDistance = distanceV2.Magnitude();
-        FixedPointVector2 pushDir = distanceV2 / moveDistance;//回拉的方向
+        FixedPointVector2 pushDir;
+        if (moveDistance <= FixedPoint.Zero)
+        {
+            // 特殊情况处理：中心点完全重合 如果不处理，下面除以 moveDistance 会报错
+            pushDir = new FixedPointVector2(FixedPoint.One, FixedPoint.Zero);
+        }
+        else
+        {
+            pushDir = distanceV2 / moveDistance;//回拉的方向
+        }
 
-        boxB.AdjustPos = boxB.LogicPos + pushDir * moveDistance;
+        FixedPoint overlap = circleA.radius - moveDistance;//陷入的距离 或者说重叠后需要回拉的距离
+
+        circleA.AdjustPos = circleA.LogicPos + pushDir * overlap;
 
         return true;
     }
 
-    //Box Vs Circle
-    //public static bool DetectCollider(Collider2DBox boxB, Collider2DCircle circleA)
-    //{
-    //    return DetectCollider(circleA, boxB);
-    //}
+    //Box VS Circle
+    public static bool DetectCollider(Collider2DBox boxB, Collider2DCircle circleA, bool needAdjustPos)
+    {
+        if (!circleA.Active || !boxB.Active)
+            return false;
+
+        FixedPoint clampedX = FixedPointMath.Clamp(circleA.x, boxB.x - boxB.HalfWidth, boxB.x + boxB.HalfWidth);
+        FixedPoint clampedY = FixedPointMath.Clamp(circleA.y, boxB.y - boxB.HalfHeight, boxB.y + boxB.HalfHeight);
+        FixedPointVector2 closestPointV2 = new FixedPointVector2(clampedX, clampedY);//box上距离圆心最近的点
+        FixedPointVector2 distanceV2 = circleA.LogicPos - closestPointV2;
+
+        bool result = circleA.radius * circleA.radius >= distanceV2.SqrMagnitude();
+        if (!needAdjustPos)
+            return result;
+
+        if (!result)
+            return false;
+
+        FixedPoint moveDistance = distanceV2.Magnitude();
+        FixedPointVector2 pushDir;
+        // 特殊情况处理：圆心完全重合 (moveDistance == 0) 如果不处理，下面除以 moveDistance 会报错 (DivideByZero)
+        if (moveDistance <= FixedPoint.Zero)
+        {
+            pushDir = new FixedPointVector2(FixedPoint.One, FixedPoint.Zero);
+        }
+        else
+        {
+            pushDir = distanceV2 / moveDistance;//回拉的方向
+        }
+        
+        FixedPoint overlap = circleA.radius - moveDistance;//陷入的距离 或者说重叠后需要回拉的距离
+        boxB.AdjustPos = boxB.LogicPos - pushDir * overlap;
+
+        return true;
+    }
 
     //Circle VS Circle
     public static bool DetectCollider(Collider2DCircle circleA, Collider2DCircle circleB, bool needAdjustPos)
