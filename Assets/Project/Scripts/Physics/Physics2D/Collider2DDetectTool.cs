@@ -159,5 +159,19 @@ public static class Collider2DDetectTool
     }
     #endregion
 
+    #region Swept AABB (扫描包围盒)
+    //根据上一帧的位置和当前帧位置 以及自身体积  生成一个大的覆盖整个路径的BOX碰撞器
+    //不管传入的是圆还是box 最终都生成box 不然生成胶囊体的话 性能没那么好 计算起来也复杂 长方型只在四个角比胶囊体多一丁点区域
+    //这一点区域带来的误检测 是完全可以接受的 换来的是性能和开发进度
+    private Collider2DBox GetSweptCollier(Collider2DBase collider,FixedPointVector2 lastFramePos, FixedPointVector2 curFramePos)
+    {
+        //计算新box的size和中心点
 
+    }
+
+    //public static bool DetectCollider
+    //{
+
+    //}
+    #endregion
 }
