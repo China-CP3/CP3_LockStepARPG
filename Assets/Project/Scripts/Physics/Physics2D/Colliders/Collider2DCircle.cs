@@ -16,4 +16,9 @@ public class Collider2DCircle : Collider2DBase
         base.UpdateLogicRadius(radius);
         this.radius = radius;
     }
+
+    public override Collider2DBox GenerateSweptAABB(FixedPointVector2 lastFramePos, FixedPointVector2 curFramePos)
+    {
+        return null;
+    }
 }

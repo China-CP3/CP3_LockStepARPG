@@ -22,4 +22,8 @@ public class Collider2DBox : Collider2DBase
         HalfHeight = Size.y / FixedPoint.CreateByInt(2);
     }
 
+    public override Collider2DBox GenerateSweptAABB(FixedPointVector2 lastFramePos, FixedPointVector2 curFramePos)
+    {
+        return null;
+    }
 }

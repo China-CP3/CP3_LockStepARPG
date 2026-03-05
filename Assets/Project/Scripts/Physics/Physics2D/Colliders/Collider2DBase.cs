@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public partial class Collider2DBase
+public abstract partial class Collider2DBase
 {
     /// <summary>
     /// 激活状态(比如怪物死亡时，状态设置false，false：表示当前碰撞体无效，不需要进行碰撞检测)
@@ -65,4 +65,10 @@ public partial class Collider2DBase
         this.Active = false;
         PhysicsMgr2D.Instance.AddToRemoveList(this);
     }
+
+    /// <summary>
+    /// 生成扫描包围盒 目前固定是Box
+    /// </summary>
+    /// <returns></returns>
+    public abstract Collider2DBox GenerateSweptAABB(FixedPointVector2 lastFramePos, FixedPointVector2 curFramePos);
 }
