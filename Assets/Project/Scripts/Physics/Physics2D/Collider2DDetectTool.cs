@@ -1,7 +1,10 @@
 
+using UnityEngine.UIElements;
+
 public static class Collider2DDetectTool
 {
     //当碰撞器重叠时 总是第一个参数被拉回 谁移动谁被拉回
+    //现在碰撞器种类少 可以这么写 如果多 最好是传参数 决定谁拉回 不然两两组合要写很多种 很麻烦
 
     #region AABB
     //Box VS Box
@@ -168,9 +171,20 @@ public static class Collider2DDetectTool
         return collider.GenerateSweptAABB(lastFramePos, curFramePos);
     }
 
-    //public static bool DetectCollider
-    //{
+    public static bool DetectCollider(Collider2DBase colliderA, Collider2DBase colliderB, FixedPointVector2 colliderALastFramePos, FixedPointVector2 colliderACurFramePos)
+    {
+        Collider2DBox sweptBox = GetSweptCollier(colliderA, colliderALastFramePos, colliderACurFramePos);
 
-    //}
+        if(colliderB is Collider2DBox)
+        {
+            return DetectCollider(sweptBox, colliderB as Collider2DBox, false);
+        }
+        else if (colliderB is Collider2DCircle)
+        {
+            return DetectCollider(sweptBox, colliderB as Collider2DCircle, false);
+        }
+
+        return false;
+    }
     #endregion
 }
