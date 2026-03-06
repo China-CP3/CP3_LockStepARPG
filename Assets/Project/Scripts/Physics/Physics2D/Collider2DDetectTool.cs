@@ -1,6 +1,4 @@
 
-using UnityEngine.UIElements;
-
 public static class Collider2DDetectTool
 {
     //当碰撞器重叠时 总是第一个参数被拉回 谁移动谁被拉回
@@ -186,5 +184,9 @@ public static class Collider2DDetectTool
 
         return false;
     }
+    #endregion
+
+    #region 射线检测AABB
+
     #endregion
 }
