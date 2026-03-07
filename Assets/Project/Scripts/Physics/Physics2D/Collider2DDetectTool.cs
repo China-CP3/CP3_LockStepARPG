@@ -187,6 +187,6 @@ public static class Collider2DDetectTool
     #endregion
 
     #region 射线检测AABB
-
+    //todo 用射线作为第二道检测 弥补sweptbox的误判
     #endregion
 }
