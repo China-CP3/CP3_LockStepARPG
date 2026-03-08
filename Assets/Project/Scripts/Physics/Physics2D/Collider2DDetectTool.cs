@@ -184,9 +184,12 @@ public static class Collider2DDetectTool
 
         return false;
     }
+
+    //todo 再写一个函数DetectCollider 一个只检测swept  另一个swpet+射线检测
     #endregion
 
     #region 射线检测AABB
-    //todo 用射线作为第二道检测 弥补sweptbox的误判
+    //todo 用射线作为第二道检测 弥补sweptbox的误判 
+
     #endregion
 }
