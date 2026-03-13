@@ -1,4 +1,6 @@
 
+using UnityEngine.UIElements;
+
 public static class Collider2DDetectTool
 {
     //当碰撞器重叠时 总是第一个参数被拉回 谁移动谁被拉回
@@ -190,6 +192,20 @@ public static class Collider2DDetectTool
 
     #region 射线检测AABB
     //todo 用射线作为第二道检测 弥补sweptbox的误判 
+    public static bool RayCastBox(Collider2DBox targetBox, FixedPointVector2 startPos, FixedPointVector2 direction, FixedPoint distance)
+    {
+        if(!targetBox.Active)
+        {
+            return false;
+        }
 
+        FixedPoint minX = targetBox.x - targetBox.HalfWidth;//targetBox最左的X
+        FixedPoint maxX = targetBox.x + targetBox.HalfWidth;//targetBox最右的X
+        FixedPoint minY = targetBox.y - targetBox.HalfHeight;//targetBox最左的Y
+        FixedPoint maxY = targetBox.y + targetBox.HalfHeight;//targetBox最右的Y
+
+
+
+    }
     #endregion
 }
