@@ -204,7 +204,7 @@ public static class Collider2DDetectTool
         FixedPoint minY = targetBox.y - targetBox.HalfHeight;//targetBox最左的Y
         FixedPoint maxY = targetBox.y + targetBox.HalfHeight;//targetBox最右的Y
 
-
+        //判断 进入时 以后进入的点为准 退出时 先退出的点为准  退出的点 大于进入的点 即可判断为碰撞
         return false;
     }
     #endregion
