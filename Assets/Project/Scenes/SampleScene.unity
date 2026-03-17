@@ -386,10 +386,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 963194225}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1e4f8c17a058c4439bee7876b048f25, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c5b3a4b1b9a7324da503d34705024c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boxSize: {x: 4, y: 4}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
