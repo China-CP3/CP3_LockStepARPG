@@ -204,8 +204,52 @@ public static class Collider2DDetectTool
         FixedPoint minY = targetBox.y - targetBox.HalfHeight;//targetBox最左的Y
         FixedPoint maxY = targetBox.y + targetBox.HalfHeight;//targetBox最右的Y
 
-        //判断 进入时 以后进入的点为准 退出时 先退出的点为准  退出的点 大于进入的点 即可判断为碰撞
-        return false;
+        //判断进入时 后进入的点为准 退出时 先退出的点为准  退出的点 大于进入的点 即可判断为碰撞
+        //要求的是 左边那条边 和右边那条边 谁是进入点 谁是退出点 距离短的就是进入点 上下2边同理
+        //时间 = 距离/速度 向量的x 就是在x轴上的速度  向量的y就是在y轴上的速度
+
+        FixedPoint xEnterTime;
+        FixedPoint xExitTime;
+        if (direction.x == FixedPoint.Zero)
+        {
+            if (startPos.x < minX || startPos.x > maxX) return false;
+
+            xEnterTime = FixedPoint.MinValue;
+            xExitTime = FixedPoint.MaxValue;
+        }
+        else
+        {
+            FixedPoint xTimeA = (minX - startPos.x) / direction.x;
+            FixedPoint xTimeB = (maxX - startPos.x) / direction.x;
+            xEnterTime = FixedPointMath.Min(xTimeA, xTimeB);
+            xExitTime = FixedPointMath.Max(xTimeA, xTimeB);
+        }
+
+        FixedPoint yEnterTime;
+        FixedPoint yExitTime;
+        if (direction.y == FixedPoint.Zero)
+        {
+            if (startPos.y < minY || startPos.y > maxY) return false;
+
+            yEnterTime = FixedPoint.MinValue;
+            yExitTime = FixedPoint.MaxValue;
+        }
+        else
+        {
+            FixedPoint yTimeA = (minY - startPos.y) / direction.y;
+            FixedPoint yTimeB = (maxY - startPos.y) / direction.y;
+            yEnterTime = FixedPointMath.Min(yTimeA, yTimeB);
+            yExitTime = FixedPointMath.Max(yTimeA, yTimeB);
+        }
+
+        FixedPoint finalEnterTime = FixedPointMath.Max(xEnterTime, yEnterTime);
+        FixedPoint finalExitTime = FixedPointMath.Min(xExitTime, yExitTime);
+
+        bool hasIntersection = finalEnterTime <= finalExitTime;//是否真的有交集 (进入时间 <= 离开时间) 判断进入时 后进入的点为准 退出时 先退出的点为准  退出的点 大于进入的点 即可判断为碰撞
+        bool isInFront = finalExitTime >= FixedPoint.Zero;//目标是否在前方 (离开时间 >= 0，防止打中背后的东西) 盒子不在射线屁股后面
+        bool isWithinRange = finalEnterTime <= distance;//距离限制 是否在射程范围内 (进入时间 <= 射程)
+        return hasIntersection && isInFront && isWithinRange;
     }
+
     #endregion
 }
