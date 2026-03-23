@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class QuadTree2D<T> where T : Collider2DBase,new()
+public class QuadTree2D<T> where T : Collider2DBase
 {
     private const int MAX_Objs = 4;//单个节点 最多容纳4个物体
     private const int MAx_Level = 5;//最多分裂5层
@@ -13,5 +13,12 @@ public class QuadTree2D<T> where T : Collider2DBase,new()
     private FixedPoint width;
     private FixedPoint height;
 
-   
+    public QuadTree2D(FixedPointVector2 center, FixedPoint width, FixedPoint height, int level)
+    {
+        this.center = center;
+        this.width = width;
+        this.height = height;
+        this.level = level;
+
+    }
 }
