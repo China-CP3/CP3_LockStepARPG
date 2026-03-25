@@ -30,6 +30,7 @@ public readonly struct FixedPoint:IEquatable<FixedPoint>
 
     public static readonly FixedPoint Zero = new FixedPoint(0);
     public static readonly FixedPoint One = new FixedPoint(ScaleFactor);
+    public static readonly FixedPoint Two = One + One;
     public static readonly FixedPoint MaxValue = new FixedPoint(long.MaxValue);//用于溢出钳制
     public static readonly FixedPoint MinValue = new FixedPoint(long.MinValue);
 

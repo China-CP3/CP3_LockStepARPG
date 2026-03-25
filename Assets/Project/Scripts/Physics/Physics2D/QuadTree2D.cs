@@ -21,4 +21,31 @@ public class QuadTree2D<T> where T : Collider2DBase
         this.level = level;
 
     }
+
+    private void Split()
+    {
+        if (level == MAx_Level)//层数到达极限了 不能再分裂了
+        {
+# if UNITY_EDITOR
+            Debug.LogError("四叉树层数满了 不能再分裂");
+# endif
+            return;
+        }
+
+        FixedPoint halfWidth = width / FixedPoint.Two;
+        FixedPoint halfHigh = height / FixedPoint.Two;
+        FixedPoint quarterWidth = halfWidth / FixedPoint.Two;
+        FixedPoint quarterHigh = halfHigh / FixedPoint.Two;
+
+        FixedPointVector2 leftUpCenter = new FixedPointVector2(center.x - quarterWidth, center.y + quarterHigh);
+        FixedPointVector2 rightUpCenter = new FixedPointVector2(center.x + quarterWidth, center.y + quarterHigh);
+        FixedPointVector2 leftBottomCenter = new FixedPointVector2(center.x - quarterWidth, center.y - quarterHigh);
+        FixedPointVector2 rightBottomCenter = new FixedPointVector2(center.x + quarterWidth, center.y - quarterHigh);
+
+        children[0] = new QuadTree2D<T>(leftUpCenter, halfWidth, halfHigh, level + 1);
+        children[1] = new QuadTree2D<T>(rightUpCenter, halfWidth, halfHigh, level + 1);
+        children[2] = new QuadTree2D<T>(leftBottomCenter, halfWidth, halfHigh, level + 1);
+        children[3] = new QuadTree2D<T>(rightBottomCenter, halfWidth, halfHigh, level + 1);
+
+    }
 }
