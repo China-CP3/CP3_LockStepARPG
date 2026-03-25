@@ -48,4 +48,9 @@ public class QuadTree2D<T> where T : Collider2DBase
         children[3] = new QuadTree2D<T>(rightBottomCenter, halfWidth, halfHigh, level + 1);
 
     }
+
+    private void Insert(T childObj)
+    {
+
+    }
 }
