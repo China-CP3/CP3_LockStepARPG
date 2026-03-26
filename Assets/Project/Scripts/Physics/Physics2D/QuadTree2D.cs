@@ -49,7 +49,7 @@ public class QuadTree2D<T> where T : Collider2DBase
 
     }
 
-    private void Insert(T childObj)
+    public void Insert(T childObj)
     {
         if (children[0] != null)//已经分裂过了 有了4个子节点 那么就找到对应的子节点 插入
         {
