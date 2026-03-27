@@ -49,18 +49,18 @@ public class QuadTree2D<T> where T : Collider2DBase
 
     }
 
-    public void Insert(T childObj)
+    public void Insert(T nodeObj)
     {
         if (children[0] != null)//已经分裂过了 有了4个子节点 那么就找到对应的子节点 插入
         {
-            int index = GetChildIndex(childObj);
-            children[index].Insert(childObj);
+            int index = GetChildIndex(nodeObj);
+            children[index].Insert(nodeObj);
         }
         else
         {
-            if(MAX_Objs > nodeList.Count)//该节点还可以容纳更多物体
+            if(nodeList.Count < MAX_Objs)//该节点还可以容纳更多物体
             {
-                nodeList.Add(childObj);
+                nodeList.Add(nodeObj);
             }
             else if(level < MAx_Level)//该节点已满 分裂到下一层
             {
@@ -72,11 +72,12 @@ public class QuadTree2D<T> where T : Collider2DBase
                 }
                 nodeList.Clear();//原nodeList里的物体已经重新分配到子节点里了 不清空就重复了
 
-                int newIndex = GetChildIndex(childObj);
-                children[newIndex].Insert(childObj);
+                int newIndex = GetChildIndex(nodeObj);
+                children[newIndex].Insert(nodeObj);
             }
             else
             {
+                nodeList.Add(nodeObj); // 层数满了就堆在当前节点
 #if UNITY_EDITOR
                 Debug.LogError("四叉树层数满了 不能再分裂");
 #endif
@@ -88,10 +89,10 @@ public class QuadTree2D<T> where T : Collider2DBase
     /// <summary>
     /// 物体属于4个子节点中哪一个 左上 右上 左下 右下
     /// </summary>
-    private int GetChildIndex(T newChild)
+    private int GetChildIndex(T nodeObj)
     {
-        bool left = newChild.x < center.x;
-        bool up = newChild.y > center.y;
+        bool left = nodeObj.x < center.x;
+        bool up = nodeObj.y > center.y;
 
         if (left && up) return 0;
         if (!left && up) return 1;
@@ -109,6 +110,21 @@ public class QuadTree2D<T> where T : Collider2DBase
                 children[i].Clear();
                 children[i] = null;
             }
+        }
+    }
+
+    public List<T> GetNodes(T nodeObj)
+    {
+        if (nodeObj == null) return null;
+
+        if (children[0] == null)//说明还没有分裂
+        {
+            return nodeList;
+        }
+        else
+        {
+            int index = GetChildIndex(nodeObj);
+            return children[index].GetNodes(nodeObj);
         }
     }
 }
