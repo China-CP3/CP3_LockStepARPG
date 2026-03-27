@@ -98,4 +98,17 @@ public class QuadTree2D<T> where T : Collider2DBase
         if (left && !up) return 2;
         return 3;
     }
+
+    public void Clear()
+    {
+        nodeList.Clear();
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (children[i] != null)
+            {
+                children[i].Clear();
+                children[i] = null;
+            }
+        }
+    }
 }
