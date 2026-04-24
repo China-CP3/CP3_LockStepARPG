@@ -22,24 +22,19 @@ public class Character : MonoBehaviour
         if (isWPressed && isShiftPressed)
         {
             // W + Shift 按下，播放Run动画
-            //animator.SetBool("Walk", false);
-            //animator.SetBool("Run", true);
+
             speed -= Time.deltaTime;
             animator.SetFloat("Speed", speed);
         }
         else if (isWPressed)
         {
             // 只按下W，播放Walk动画
-            //animator.SetBool("Walk", true);
-            //animator.SetBool("Run", false);
+
             speed += Time.deltaTime;
             animator.SetFloat("Speed", speed);
         }
         else
         {
-            // 没有按下W，播放Idle动画
-            //animator.SetBool("Walk", false);
-            //animator.SetBool("Run", false);
             
         }
     }
