@@ -27,5 +27,12 @@ public class EntityManager
         return null;
     }
 
-
+    public void DestroyEntity(int id)
+    {
+        if (entitiesDic.TryGetValue(id, out var entity))
+        {
+            entity.Destroy();           // 先让 Entity 自己清理组件
+            entitiesDic.Remove(id);     // 再从字典移除
+        }
+    }
 }
