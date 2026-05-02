@@ -7,6 +7,8 @@ public class EntityManager
     // 自增 Id 计数器（从 1 开始，0 留给"无效 Id"）
     private int nextId = 1;
 
+    public int EntityCount { get { return entitiesDic.Count; }}
+
     // 存储所有 Entity 的字典（key = Id，value = Entity）
     private Dictionary<int, Entity> entitiesDic = new Dictionary<int, Entity>();
 
@@ -34,5 +36,16 @@ public class EntityManager
             entity.Destroy();           // 先让 Entity 自己清理组件
             entitiesDic.Remove(id);     // 再从字典移除
         }
+    }
+
+    public void DestroyEntity(Entity deleteEntity)
+    {
+        DestroyEntity(deleteEntity.Id);
+    }
+
+    //为什么不用list而是这个接口呢  因为这样外部只能foreach访问 不能add remove改动字典
+    public IEnumerable<Entity> GetAllEntities()
+    {
+        return entitiesDic.Values;
     }
 }
