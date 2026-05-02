@@ -40,6 +40,7 @@ public class EntityManager
 
     public void DestroyEntity(Entity deleteEntity)
     {
+        if (deleteEntity == null) return;
         DestroyEntity(deleteEntity.Id);
     }
 
@@ -47,5 +48,18 @@ public class EntityManager
     public IEnumerable<Entity> GetAllEntities()
     {
         return entitiesDic.Values;
+    }
+
+    public List<Entity> GetEntityListWithComponent<T>() where T : EntityComponent
+    {
+        List<Entity> result = new List<Entity>();
+        foreach (var entity in entitiesDic.Values)
+        {
+            if (entity.HasComponent<T>())
+            {
+                result.Add(entity);
+            }
+        }
+        return result;
     }
 }
