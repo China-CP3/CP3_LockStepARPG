@@ -13,6 +13,7 @@ public class EntityComponent
     public virtual void OnRemoveComponent()
     {
 
+        SetOwner(null);
     }
 
     /// <summary>
@@ -20,6 +21,8 @@ public class EntityComponent
     /// </summary>
     public virtual void OnAddComponent()
     {
+        
+
 
     }
 

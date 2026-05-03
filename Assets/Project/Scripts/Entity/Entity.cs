@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 public class Entity
 {
@@ -16,6 +17,12 @@ public class Entity
     public T AddComponent<T>() where T : EntityComponent,new()
     {
         Type type = typeof(T);
+        if (IsDestroyed)
+        {
+            Debug.LogError($"Entity {Id} 已销毁，无法添加组件 {type.Name}");
+            return null;
+        }
+
         if (componentsDic.TryGetValue(type, out var existingComponent))
         {
             Debug.LogError($"Entity {Id} 已存在组件 {type.Name}，请勿重复添加！");
