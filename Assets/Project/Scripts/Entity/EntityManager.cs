@@ -62,4 +62,14 @@ public class EntityManager
         }
         return result;
     }
+
+    public void Clear()
+    {
+        foreach (var item in entitiesDic)
+        {
+            item.Value.Destroy();
+        }
+        entitiesDic.Clear();
+        nextId = 1;
+    }
 }
