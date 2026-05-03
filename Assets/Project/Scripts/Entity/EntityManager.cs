@@ -65,9 +65,9 @@ public class EntityManager
 
     public void Clear()
     {
-        foreach (var item in entitiesDic)
+        foreach (var entity in entitiesDic.Values)
         {
-            item.Value.Destroy();
+            entity.Destroy();
         }
         entitiesDic.Clear();
         nextId = 1;
