@@ -8,11 +8,18 @@ public class Entity
 {
     public int Id { get; }
     public bool IsDestroyed { get; private set; }
-    public int componentCount { get { return componentsDic.Count; } }
+    public int ComponentCount { get { return componentsDic.Count; } }
+    private string name;
+    public string Name 
+    {
+        get { return name; } 
+        set { if(!string.IsNullOrEmpty(value)) { name = value; }} 
+    }
     private Dictionary<Type, EntityComponent> componentsDic = new Dictionary<Type, EntityComponent>();
     public Entity(int id)
     {
         this.Id = id;
+        this.name = $"Entity_{id}"+id;
     }
 
     public T AddComponent<T>() where T : EntityComponent,new()
