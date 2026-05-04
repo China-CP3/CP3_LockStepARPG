@@ -8,6 +8,7 @@ public class Entity
 {
     public int Id { get; }
     public bool IsDestroyed { get; private set; }
+    public int componentCount { get { return componentsDic.Count; } }
     private Dictionary<Type, EntityComponent> componentsDic = new Dictionary<Type, EntityComponent>();
     public Entity(int id)
     {
