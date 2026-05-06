@@ -24,12 +24,12 @@ public partial class Entity
 
     public bool HasAllTag(EntityTag tag)
     {
-        return (this.tags & tag) > 0;
+        return (this.tags & tag) == tag;
     }
 
     public bool HasAnyTag(EntityTag tag)
     {
-        return (this.tags & tag) > 0;
+        return (this.tags & tag) != 0;
     }
 
     public void ClearTags()
