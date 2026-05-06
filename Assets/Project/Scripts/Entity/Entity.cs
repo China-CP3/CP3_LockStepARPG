@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.UI.GridLayoutGroup;
 
-public class Entity
+public partial class Entity
 {
     public int Id { get; }
     public bool IsDestroyed { get; private set; }
@@ -22,6 +22,10 @@ public class Entity
             name = value;
         }
     }
+
+    private EntityTag tags = EntityTag.None;
+    public EntityTag Tags => tags;
+
     private Dictionary<Type, EntityComponent> componentsDic = new Dictionary<Type, EntityComponent>();
     public Entity(int id)
     {
@@ -89,4 +93,6 @@ public class Entity
 
         componentsDic.Clear();
     }
+
+
 }
