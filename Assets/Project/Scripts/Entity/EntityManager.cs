@@ -12,10 +12,14 @@ public class EntityManager
     // 存储所有 Entity 的字典（key = Id，value = Entity）
     private Dictionary<int, Entity> entitiesDic = new Dictionary<int, Entity>();
 
+    private List<Entity> pendingAddList = new List<Entity>();//延迟增加列表
+    private List<Entity> pendingRemoveList = new List<Entity>();//延迟删除列表
+
     public Entity CreateEntity()
     {
         Entity entity = new Entity(nextId);
-        entitiesDic.Add(nextId, entity);
+        pendingAddList.Add(entity);
+        //entitiesDic.Add(nextId, entity);
         nextId++;
         return entity;
     }
