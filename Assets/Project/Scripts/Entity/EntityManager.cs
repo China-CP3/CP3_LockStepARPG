@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class EntityManager
 {
     // 自增 Id 计数器（从 1 开始，0 留给"无效 Id"）
     private int nextId = 1;
 
-    public int EntityCount { get { return entitiesDic.Count; }}
+    public int EntityCount { get { return entitiesDic.Count; } }
 
     // 存储所有 Entity 的字典（key = Id，value = Entity）
     private Dictionary<int, Entity> entitiesDic = new Dictionary<int, Entity>();
@@ -19,9 +20,14 @@ public class EntityManager
     {
         Entity entity = new Entity(nextId);
         pendingAddList.Add(entity);
-        //entitiesDic.Add(nextId, entity);
         nextId++;
         return entity;
+
+        /*  Entity 是 new 出来的对象，存在 ≠ 在字典里
+
+            创建后立刻做的事（加组件、读 Id）操作的是对象自己，跟字典无关
+
+            别人通过 Id 反查的需求通常发生在下一帧，那时候待办列表已经清空、Entity 已经在字典里*/
     }
 
     public Entity GetEntity(int id)
@@ -37,9 +43,18 @@ public class EntityManager
     {
         if (entitiesDic.TryGetValue(id, out var entity))
         {
-            entity.Destroy();           // 先让 Entity 自己清理组件
-            entitiesDic.Remove(id);     // 再从字典移除
+            pendingRemoveList.Add(entity);
         }
+        else
+        {
+            return;
+        }
+        
+        //if (entitiesDic.TryGetValue(id, out var entity))
+        //{
+        //    entity.Destroy();           // 先让 Entity 自己清理组件
+        //    entitiesDic.Remove(id);     // 再从字典移除
+        //}
     }
 
     public void DestroyEntity(Entity deleteEntity)
