@@ -91,4 +91,28 @@ public class EntityManager
         entitiesDic.Clear();
         nextId = 1;
     }
+
+    private void OnLogicFrameFinish()
+    {
+        for (int i = 0; i < pendingRemoveList.Count; i++)
+        {
+            var item = pendingRemoveList[i];
+            if (entitiesDic.ContainsKey(item.Id))
+            {
+                item.Destroy();
+                entitiesDic.Remove(item.Id);
+            }
+        }
+        pendingRemoveList.Clear();
+
+        for (int i = 0; i < pendingAddList.Count; i++)
+        {
+            var item = pendingAddList[i];
+            if (!entitiesDic.ContainsKey(item.Id))
+            {
+                entitiesDic.Add(item.Id, item);
+            }
+        }
+        pendingAddList.Clear();
+    }
 }
