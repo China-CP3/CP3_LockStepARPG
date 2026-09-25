@@ -30,13 +30,11 @@ namespace CP3.Demo.ServiceLocator
                 return;
             }
 
-            if (s_Services.ContainsKey(type))
+            if (!s_Services.TryAdd(type, service))//两种方式 Add(key, value) 已存在会抛异常  [key] = value 已存在会静默覆盖
             {
                 Debug.LogErrorFormat("RegisterService: service has Contains:{0}", type.Name);
                 return;
             }
-
-            s_Services.Add(type, service);//两种方式 Add(key, value) 已存在会抛异常  [key] = value 已存在会静默覆盖
 
         }
 
@@ -49,6 +47,16 @@ namespace CP3.Demo.ServiceLocator
             }
             Debug.LogErrorFormat("GetService: not registered Type:{0}", type.Name);
             return null;
+        }
+
+        public static void UnRegisterService<T>() where T:class, IMarkService
+        {
+            Type type = typeof(T);
+            if(!s_Services.Remove(type))
+            {
+                Debug.LogErrorFormat("UnRegisterService: not has Type:{0}", type.Name);
+                return;
+            }  
         }
 
     }
