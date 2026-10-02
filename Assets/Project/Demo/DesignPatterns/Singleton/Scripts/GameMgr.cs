@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class GameMgr
 {
-    public static GameMgr Instance { get; }
+    private static GameMgr instance;
+    public static GameMgr Instance
+    {
+        get { if (instance == null) instance = new GameMgr();return instance;}
+    }
     private GameMgr() { }
 
     public int Gold = 0;
