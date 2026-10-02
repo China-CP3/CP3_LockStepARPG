@@ -10,6 +10,8 @@ public class Test : MonoBehaviour
     {
         ServiceLocator.RegisterService<IAudioService>(new AudioService());
         ServiceLocator.GetService<IAudioService>().PlayAudio();
+        ServiceLocator.ClearAll();
+        ServiceLocator.GetService<IAudioService>().PlayAudio();
     }
 
     // Update is called once per frame

@@ -59,5 +59,11 @@ namespace CP3.Demo.ServiceLocator
             }  
         }
 
+        public static void ClearAll()
+        {
+            int count = s_Services.Count;
+            s_Services.Clear();
+            Debug.LogFormat("ServiceLocator: ClearAll, count={0}", count);
+        }
     }
 }
