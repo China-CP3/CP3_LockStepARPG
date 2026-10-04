@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameMgr
 {
     private static readonly object lockObj = new object();
-    private static GameMgr instance;
+    private static volatile GameMgr instance;
     public static GameMgr Instance
     {
         get
